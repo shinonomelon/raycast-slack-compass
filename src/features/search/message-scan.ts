@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import { compareTs, type Hit } from "../../slack/hits.ts";
 import type { SearchPageOutcome } from "../../slack/slack.ts";
 import type { MessageSearchPlan } from "../search-scope/search-plan.ts";
@@ -139,7 +138,7 @@ export function createMessageScan(
             kind: "failed",
             failure: {
               kind: "error",
-              message: t("検索に失敗しました。続きを取得で再試行できます"),
+              message: "Search failed. Use Continue Search to try again",
             },
           };
         }

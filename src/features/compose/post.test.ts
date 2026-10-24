@@ -216,7 +216,7 @@ test("50blocksを超える本文はDMを開く前に明確な非送信失敗を�
     assert.ok(
       result.kind === "failed" &&
         /50/.test(result.message) &&
-        /送信していません/.test(result.message),
+        /Nothing was sent/.test(result.message),
     );
     assert.equal(calls.length, 0);
   }
@@ -248,8 +248,8 @@ test("分割できない巨大リンクは本文を変更して送らず検証�
   assert.equal(result.kind, "failed");
   assert.ok(
     result.kind === "failed" &&
-      /3000/.test(result.message) &&
-      /送信していません/.test(result.message),
+      /3,000/.test(result.message) &&
+      /Nothing was sent/.test(result.message),
   );
   assert.equal(calls.length, 0);
 });

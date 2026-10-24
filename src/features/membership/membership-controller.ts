@@ -1,5 +1,4 @@
 import { recordRequestCacheHit } from "../../slack/request-context.ts";
-import { t } from "../../shared/i18n.ts";
 import { scopeKey, type Session } from "../../slack/identity.ts";
 import { SlackApiError } from "../../slack/slack-api.ts";
 import type { Conversation } from "../../shared/types.ts";
@@ -76,7 +75,7 @@ export class MembershipController {
       update({
         status: "auth-required",
         data: [],
-        error: t("Slackの認証を確認し、Hubを開き直してください"),
+        error: "Check Slack authentication and reopen Slack Compass",
       });
       return;
     }
@@ -133,7 +132,7 @@ export class MembershipController {
         )
           throw new SlackApiError(
             "configuration",
-            t("参加者は重複なく1人から5人まで指定してください"),
+            "Select between 1 and 5 distinct people",
           );
         const entries: MembershipEntry[] = [];
         for (const id of ids)
@@ -152,15 +151,12 @@ export class MembershipController {
       // APIの取消を無視する実装でも、操作全体の待ち時間を制限する。
       const timeout = new Promise<never>((_resolve, reject) => {
         abortWait = () =>
-          reject(new SlackApiError("aborted", t("通信を中断しました")));
+          reject(new SlackApiError("aborted", "Request cancelled"));
         controller.signal.addEventListener("abort", abortWait, { once: true });
         timer = setTimeout(
           () =>
             reject(
-              new SlackApiError(
-                "timeout",
-                t("参加関係の取得が時間切れになりました"),
-              ),
+              new SlackApiError("timeout", "Membership request timed out"),
             ),
           MEMBERSHIP_TIMEOUT_MS,
         );
@@ -189,19 +185,17 @@ export class MembershipController {
             : (error.retryAfter ?? 60),
           error:
             error.kind === "deferred"
-              ? t("Slack APIの取得を延期しました")
-              : t("Slack APIの回数制限です。待ってからRefreshしてください"),
+              ? "Slack API request is waiting"
+              : "Slack API rate limit. Wait before refreshing",
         });
       } else {
         // 任意の例外本文には認証情報が含まれうるため、画面へ渡さない。
         const message =
           error instanceof SlackApiError && error.kind === "timeout"
-            ? t("参加関係の取得が時間切れになりました")
+            ? "Membership request timed out"
             : error instanceof SlackApiError && error.code === "missing_scope"
-              ? t("参加関係の取得に必要なSlackの権限がありません")
-              : t(
-                  "参加関係を取得できませんでした。Refreshで再試行してください",
-                );
+              ? "Missing Slack permissions to fetch memberships"
+              : "Could not fetch memberships. Refresh to try again";
         update({ ...old, status: "failed", error: message });
       }
       controller.abort();

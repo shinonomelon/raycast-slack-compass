@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import type { Conversation, Person } from "../../shared/types.ts";
 import type { ChannelLibrary } from "../channel-library/model.ts";
 import type { SearchScope } from "./model.ts";
@@ -28,15 +27,15 @@ export function searchScopeTitle(
   const range = scope.range;
   const label =
     range.kind === "all"
-      ? t("すべて")
+      ? "All"
       : range.kind === "favorites"
-        ? t("お気に入りチャンネル")
+        ? "Favorite Channels"
         : range.kind === "section"
           ? (library.sections.find((s) => s.id === range.sectionId)?.name ??
-            t("削除されたセクション"))
-          : `#${conversations.find((c) => c.id === range.channelId)?.name ?? t("参照できないチャンネル")}`;
+            "Deleted Section")
+          : `#${conversations.find((c) => c.id === range.channelId)?.name ?? "Unavailable Channel"}`;
   const sender = people.find((p) => p.id === scope.senderId);
   return scope.senderId
-    ? `${label} / ${sender?.displayName || sender?.realName || sender?.handle || t("指定投稿者")}`
+    ? `${label} / ${sender?.displayName || sender?.realName || sender?.handle || "Selected Sender"}`
     : label;
 }

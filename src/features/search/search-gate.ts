@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 // 検索の回し方の判断。@raycast/api を読み込まない純粋な部品で、node のテストから動かせる。
 // 止める期限の保存は gate-store.ts に分ける（Raycast の Cache を値として読むため、テストでは読み込めない）。
 //
@@ -81,7 +80,7 @@ function classifyApiFailure(
   if (error instanceof SlackApiError && error.kind === "timeout")
     return {
       kind: "timeout",
-      message: t("{0}が時間切れになりました", label),
+      message: `${label} timed out`,
       pause: { until: now + TIMEOUT_PAUSE_MS, cause: "timeout" },
     };
   if (error instanceof SlackApiError && error.kind === "deferred")
@@ -105,19 +104,17 @@ function classifyApiFailure(
   return {
     kind: "error",
     message:
-      error instanceof Error
-        ? error.message
-        : t("Slack APIへの問い合わせに失敗しました"),
+      error instanceof Error ? error.message : "Slack API request failed",
   };
 }
 export const classifySearchFailure = (
   error: unknown,
   now: number,
-): SearchFailure => classifyApiFailure(error, now, t("検索"));
+): SearchFailure => classifyApiFailure(error, now, "Search");
 export const classifyLastReadFailure = (
   error: unknown,
   now: number,
-): LastReadFailure => classifyApiFailure(error, now, t("既読位置の取得"));
+): LastReadFailure => classifyApiFailure(error, now, "Read Position Request");
 // 前の期限があれば、遅いほうを使う（短い期限で、止めていた期間を縮めない）
 export function mergePause(current: Pause | undefined, next: Pause): Pause {
   return current && current.until > next.until ? current : next;

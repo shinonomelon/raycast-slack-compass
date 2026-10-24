@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 // 自分宛て・既読位置・お気に入りの未読の取得。@raycast/api を読み込まないので、node のテストから動かせる
 // （保存・止める期限・Slack API の呼び出しは、ports で受け取る。画面側の use-triage.ts が本物をつなぐ）。
 //
@@ -125,7 +124,7 @@ export function createTriageFetchers(ports: Ports) {
     if (outcome.kind === "aborted") {
       return {
         kind: "failed",
-        message: t("検索を中断しました"),
+        message: "Search cancelled",
       };
     }
     const { failure } = outcome;

@@ -1,4 +1,3 @@
-import { t, getLocale } from "../../shared/i18n.ts";
 import { Action, ActionPanel, Color, Icon, Keyboard, List } from "@raycast/api";
 import type { ReactNode } from "react";
 import { ComposeForm } from "../compose/compose-form.tsx";
@@ -29,31 +28,31 @@ const STATE_ACCESSORIES: Record<ReadState, List.Item.Accessory> = {
   unread: {
     icon: { source: Icon.CircleFilled, tintColor: Color.Red },
     get tooltip() {
-      return t("未読");
+      return "Unread";
     },
   },
   read: {
     icon: { source: Icon.Circle, tintColor: Color.SecondaryText },
     get tooltip() {
-      return t("既読");
+      return "Read";
     },
   },
   thread: {
     icon: { source: Icon.SpeechBubble, tintColor: Color.Blue },
     get tooltip() {
-      return t("スレッド返信（既読かどうかは判定しない）");
+      return "Thread reply (read status not evaluated)";
     },
   },
   unknown: {
     icon: { source: Icon.QuestionMarkCircle, tintColor: Color.SecondaryText },
     get tooltip() {
-      return t("未確認（既読位置を取れていない）");
+      return "Unknown (read position unavailable)";
     },
   },
   handled: {
     icon: { source: Icon.CheckCircle, tintColor: Color.Green },
     get tooltip() {
-      return t("開いた・対応済み");
+      return "Opened / Handled";
     },
   },
 };
@@ -126,7 +125,7 @@ export function MessageRow({
   const { target, threadTs } = replyTargetOf(replyHit);
   const parent = replyParentText({
     sender,
-    time: date.toLocaleString(getLocale()),
+    time: date.toLocaleString("en-US"),
     body: toPlain(
       detailText ??
         threadDetail?.data?.messages.find((item) => item.ts === hit.ts)?.text ??
@@ -137,12 +136,12 @@ export function MessageRow({
   return (
     <List.Item
       id={id}
-      title={toPlain(hit.text, names.lookup) || t("（本文なし）")}
+      title={toPlain(hit.text, names.lookup) || "(No message body)"}
       subtitle={showDetail ? undefined : label}
       accessories={[
         ...(state ? [STATE_ACCESSORIES[state]] : []),
         ...(showDetail ? [] : [{ text: sender }]),
-        { date, tooltip: date.toLocaleString(getLocale()) },
+        { date, tooltip: date.toLocaleString("en-US") },
       ]}
       detail={
         <List.Item.Detail
@@ -152,14 +151,14 @@ export function MessageRow({
       actions={
         <ActionPanel>
           <Action.Open
-            title={t("Open in Slack")}
+            title="Open in Slack"
             icon={Icon.ArrowRight}
             target={messageLink(session.display.teamId, replyHit)}
             application="Slack"
             onOpen={onOpen}
           />
           <Action
-            title={showDetail ? t("Hide Details") : t("Show Details")}
+            title={showDetail ? "Hide Details" : "Show Details"}
             icon={Icon.Sidebar}
             shortcut={DETAILS_SHORTCUT}
             onAction={onToggleDetail}
@@ -168,13 +167,13 @@ export function MessageRow({
             <>
               {threadDetail.data?.cursor && !threadDetail.loading ? (
                 <Action
-                  title={t("過去の投稿をさらに取得")}
+                  title="Load More Earlier Messages"
                   icon={Icon.ArrowDown}
                   onAction={threadDetail.more}
                 />
               ) : null}
               <Action
-                title={t("詳細を更新")}
+                title="Refresh Details"
                 icon={Icon.ArrowClockwise}
                 onAction={threadDetail.refresh}
               />
@@ -182,7 +181,7 @@ export function MessageRow({
           ) : null}
           {replyEnabled ? (
             <Action.Push
-              title={t("Reply in Thread")}
+              title="Reply in Thread"
               icon={Icon.Reply}
               shortcut={REPLY_SHORTCUT}
               target={
@@ -201,14 +200,14 @@ export function MessageRow({
             />
           ) : null}
           <Action
-            title={marked ? t("Unmark as Handled") : t("Mark as Handled")}
+            title={marked ? "Unmark as Handled" : "Mark as Handled"}
             icon={marked ? Icon.Circle : Icon.CheckCircle}
             shortcut={HANDLED_SHORTCUT}
             onAction={onToggleHandled}
           />
           {conversationFilter ? (
             <Action
-              title={t("Filter by This Conversation")}
+              title="Filter by This Conversation"
               icon={Icon.Filter}
               shortcut={FILTER_SHORTCUT}
               onAction={() => onFilter(conversationFilter)}
@@ -216,7 +215,7 @@ export function MessageRow({
           ) : null}
           {conversationFilter ? (
             <Action
-              title={t("Filter by This Conversation")}
+              title="Filter by This Conversation"
               icon={Icon.Filter}
               shortcut={FILTER_SHORTCUT_ALT}
               onAction={() => onFilter(conversationFilter)}
@@ -224,28 +223,28 @@ export function MessageRow({
           ) : null}
           {senderFilter ? (
             <Action
-              title={t("Filter by Sender")}
+              title="Filter by Sender"
               icon={Icon.Person}
               onAction={() => onFilter(senderFilter)}
             />
           ) : null}
           {hit.permalink ? (
             <Action.OpenInBrowser
-              title={t("Open Permalink in Browser")}
+              title="Open Permalink in Browser"
               url={hit.permalink}
               shortcut={Keyboard.Shortcut.Common.Open}
             />
           ) : null}
           {hit.permalink ? (
             <Action.CopyToClipboard
-              title={t("Copy Permalink")}
+              title="Copy Permalink"
               content={hit.permalink}
               shortcut={Keyboard.Shortcut.Common.Copy}
             />
           ) : null}
           {membershipContext?.session.canFetch && person ? (
             <Action.Push
-              title={t("View Channels with Sender")}
+              title="View Channels with Sender"
               icon={Icon.Hashtag}
               target={
                 <PersonChannels
@@ -258,7 +257,7 @@ export function MessageRow({
           {membershipContext?.session.canFetch &&
           (hit.channelKind === "channel" || hit.channelKind === "private") ? (
             <Action.Push
-              title={t("View Channel Members")}
+              title="View Channel Members"
               icon={Icon.TwoPeople}
               target={
                 <ChannelMembers

@@ -1,4 +1,3 @@
-import * as i18n from "../../shared/i18n.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -55,7 +54,6 @@ function harness(cause: gate.Pause["cause"] = "rate_limited") {
       {
         exports,
         require: (id: string) => {
-          if (id.endsWith("/i18n.ts")) return i18n;
           assert.ok(id in deps, id);
           return deps[id];
         },
@@ -223,25 +221,13 @@ test("既存last-read停止を維持し、アカウント別検索停止と互�
   assert.equal(ui.gateStore.readAccountSearchPause!("T1-U1"), undefined);
 });
 
-for (const language of ["ja", "en"] as const) {
-  test(`未送信の延期は回数制限や時間切れと区別して表示する ${language}`, async () => {
-    i18n.setLanguage(language);
-    try {
-      const ui = harness("deferred");
-      await ui.mount("T1-U1", () => Promise.resolve({}));
-      assert.ok(
-        ui.toasts.some(
-          (toast) => toast.title === i18n.t("Slack APIの取得を延期しました"),
-        ),
-      );
-      assert.ok(
-        ui.toasts.every(
-          (toast) =>
-            !/時間切れ|回数制限|timed out|rate limit/i.test(toast.title),
-        ),
-      );
-    } finally {
-      i18n.setLanguage("ja");
-    }
-  });
-}
+test("未送信の延期は回数制限や時間切れと区別して表示する", async () => {
+  const ui = harness("deferred");
+  await ui.mount("T1-U1", () => Promise.resolve({}));
+  assert.ok(
+    ui.toasts.some((toast) => toast.title === "Slack API request is waiting"),
+  );
+  assert.ok(
+    ui.toasts.every((toast) => !/timed out|rate limit/i.test(toast.title)),
+  );
+});

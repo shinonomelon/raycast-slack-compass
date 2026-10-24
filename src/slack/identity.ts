@@ -1,4 +1,3 @@
-import { t } from "../shared/i18n.ts";
 // auth.testで自分を確認してから取得し、キャッシュをワークスペース・ユーザーごとに分ける。
 import { createHash } from "node:crypto";
 import type { Settings } from "../shared/settings.ts";
@@ -66,10 +65,10 @@ export function selfHandles(user: string, previousHandles: string): string[] {
 export type IdentityFailureKind = "missing-token" | "failed";
 export const FAILURE_TITLES: Record<IdentityFailureKind, string> = {
   get "missing-token"() {
-    return t("Slack Access Tokenを設定してください");
+    return "Set your Slack Access Token";
   },
   get failed() {
-    return t("Slackに自分の情報を問い合わせられませんでした");
+    return "Could not retrieve your Slack account information";
   },
 };
 export type IdentityFailure = {
@@ -101,9 +100,7 @@ export async function fetchIdentity(
   if (!settings.accessToken.trim())
     return failure(
       "missing-token",
-      t(
-        "拡張の設定のSlack Access Tokenに、自分のUser OAuth Tokenを入れてください",
-      ),
+      "Enter your User OAuth Token in Slack Access Token in the extension preferences",
     );
   try {
     const raw = await api(
@@ -118,7 +115,7 @@ export async function fetchIdentity(
     if (object(raw).bot_id)
       return failure(
         "failed",
-        t("Bot Tokenは使用できません。User OAuth Tokenを設定してください"),
+        "Bot Tokens are not supported. Set a User OAuth Token",
       );
     const identity = readIdentity({
       userId: raw.user_id,
@@ -129,17 +126,14 @@ export async function fetchIdentity(
     });
     return identity
       ? { kind: "ok", identity }
-      : failure("failed", t("auth.testの応答を読み取れませんでした"));
+      : failure("failed", "Could not read the auth.test response");
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return failure(
       "failed",
-      t(
-        "{0}。Slack Access Tokenと権限を確認してください",
-        maskTokens(message)
-          .replaceAll(settings.accessToken, "***")
-          .slice(0, 300),
-      ),
+      `${maskTokens(message)
+        .replaceAll(settings.accessToken, "***")
+        .slice(0, 300)}. Check your Slack Access Token and permissions`,
     );
   }
 }

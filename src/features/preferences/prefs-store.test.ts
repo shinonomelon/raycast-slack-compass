@@ -299,7 +299,7 @@ test("保存した設定は、そのまま読み直せる。一時ファイル�
 test("トーストの文：壊れていたときは退避先のファイル名を出し（置き場のパスは出さない）、読めなかったときは理由を出す", () => {
   const backup = `/Users/x/extensions/slack-hub/prefs.json.broken-${NOW}`;
   const broken = prefsNoticeToast({ kind: "broken-restarted", backup });
-  assert.equal(broken.title, "設定ファイルが壊れていました");
+  assert.equal(broken.title, "The preferences file was corrupted");
   assert.ok(broken.message.includes(`prefs.json.broken-${NOW}`));
   assert.ok(!broken.message.includes("/Users/x"));
 
@@ -309,14 +309,14 @@ test("トーストの文：壊れていたときは退避先のファイル名�
   });
   assert.ok(unreadable.message.includes("EACCES: permission denied"));
   // 保存しないことを、本人に伝える
-  assert.ok(unreadable.message.includes("保存しません"));
+  assert.ok(unreadable.message.includes("will not be saved"));
 
   // 読めなかったお知らせと同じ理由で起きても、退避できなかったお知らせは別のお知らせ（印は種類で変わる）
   const kept = prefsNoticeToast({
     kind: "broken-kept",
     reason: "EACCES: permission denied",
   });
-  assert.ok(kept.message.includes("保存しません"));
+  assert.ok(kept.message.includes("without saving changes"));
   // 3つとも違う印であること。2つが同じでも通らないよう、大きさが3であることを確かめる
   assert.equal(
     new Set([broken.key, unreadable.key, kept.key]).size,

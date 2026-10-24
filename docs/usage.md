@@ -1,138 +1,122 @@
-# Slack Hubの詳しい使い方
+# Using Slack Compass
 
-[READMEへ戻る](../README.md)
+[Back to the README](../README.md)
 
-検索の条件、ショートカット、メンション・DMの整理を確認したいときに読むページです。
+This page covers search syntax, shortcuts, and how to triage mentions and DMs.
 
-## 表示言語を切り替える
+## Basics and keys
 
-1. Raycastの設定 → Extensions → Slack Hubを開きます。HubのActionsから「拡張機能の設定を開く」でも移動できます。
-2. `Language / 言語`で`日本語`または`English`を選びます。
-3. Slack Hubを閉じ、開き直します。
+Open **Search Slack** in Raycast.
 
-一覧、Actions、詳細、送信フォーム、確認ダイアログ、エラー表示を切り替えます。日時も選択した言語で表示します。Slack本文、名前、自分で付けた別名やセクション名、検索式、AI判定の指示文は変えません。
+In the list, Return opens the selected item in Slack. ⌘Return shows or hides details. This works the same for messages, conversations, and people. ⌘N opens the Write form for a conversation or a person, and for regular members in the membership lists. Inside a form, ⌘Return still submits the post.
 
-一覧は「チャンネル / Channels」「ユーザー / People」「グループDM / Group DMs」に分けます。お気に入りや検索の順位は各種別の中で保ちます。「メンション・DM / Mentions & DMs」は従来の自分宛て一覧、「返信待ち / Awaiting Reply」は返信待ち候補の画面です。
+- As you type a name, conversations (channels, private channels, and group DMs) and people appear. Favorites and conversations with unread messages come first. A red tag at the right of a row shows the unread count. A `+` in `3+` means there are more than that.
+- Names and the suggestions for `in:`, `from:`, and `to:` support fuzzy matching. `prj` finds `project_alpha`, and so do `project_alpa` and `project_alhpa`. Fuzzy matching also applies to aliases and dictionary terms. Exact, prefix, and substring matches stay on top. Typo and skip matches for letters and digits come after them.
+- A skip match needs at least 3 characters, in order, with a matched span no longer than twice the input length. Typo correction applies only to words of 4 or more letters and digits. It allows one inserted, deleted, or replaced character, or one swap of adjacent characters, in the whole word or in each word of a name. It does not correct Japanese typos or handle reading conversions. When you separate several words with spaces, only candidates that match every word appear.
+- A fuzzy suggestion for a filter becomes a real term only after you select it and run Use This Candidate. Slack Compass never confirms a misspelled recipient on its own. Searching message text still uses Slack's own search.
+- When you type a term or `in:`, `from:`, or `to:`, message results appear below the conversations, newest first. One request returns up to 100 results. Narrow older results with terms or dates.
+- With nothing typed, **Mentions & DMs (Past 7 Days)** appears at the top. It covers mentions of you and DMs and group DMs addressed to you. Your own posts are excluded. It lists unread items. To avoid missing anything, it also lists thread replies and items whose read state is unknown. It does not include `@here`, `@channel`, or user-group mentions.
 
-## 使い方とキー
+You can use these forms in the search bar:
 
-Raycast で `Slack Hub` を開きます。
+| Form                                                          | Meaning                                                            |
+| ------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `in:#channel-name`                                            | Messages in that channel. `in:@name` means the DM with that person |
+| `from:@handle`                                                | Messages from that person                                          |
+| `to:@handle`                                                  | Messages addressed to that person                                  |
+| `from:me`, `to:me`                                            | Your messages, messages addressed to you                           |
+| `-from:@handle`                                               | A leading `-` excludes the match                                   |
+| `after:`, `before:`, `on:`, `during:`, `has:`, `is:`, `with:` | Passed to Slack search as written                                  |
 
-一覧のReturnは選択した対象をSlackで開き、⌘Returnは詳細を表示・非表示にします。メッセージも会話・人も同じ操作です。会話・人と所属一覧の通常参加者への投稿するは⌘Nです。フォーム内の⌘Returnは引き続き投稿操作です。
+While you type `in:` and similar terms, suggestions appear at the top. Select one and choose Use This Candidate to confirm it.
 
-- 名前を打つと、会話（チャンネル・非公開チャンネル・グループ DM）と人が並びます。お気に入りと、未読のある会話が上に来ます。未読の数は、行の右側に赤いタグで出ます。`3+` の `+` は、実際はそれ以上あるという印です。
-- 名前と `in:`・`from:`・`to:` の候補は、ファジー検索に対応します。`prj`で`project_alpha`、`project_alpa`や`project_alhpa`でも`project_alpha` を探せます。別名と辞書の検索語にも効きます。既存の完全一致・前方一致・部分一致を上位に保ち、その後に英数字の誤字、飛び飛び一致を並べます。
-- 飛び飛び入力は3文字以上で、文字の順序を守り、一致区間が入力長の2倍以下の場合に当たります。誤字補正は4文字以上の英数字語に限り、語全体または名前の区切りごとの語に、1文字の挿入・削除・置換か隣接2文字の入れ替えを許容します。日本語の誤字・読み仮名変換は扱いません。スペース区切りの複数語はすべて一致する候補だけを出します。
-- 絞り込みのファジー候補は、選んでこの候補を使うを実行すると正式な語になります。入力ミスのある宛先を自動で確定しません。メッセージ本文の検索は、従来どおりSlackの検索を使います。
-- 語や `in:`・`from:`・`to:` を打つと、会話の下に、メッセージの検索結果が新しい順に並びます。1回に100件までなので、古いものは語や日付で絞ります。
-- 何も打たずに開くと、先頭に「メンション・DM（過去7日）」が出ます。対象は、自分へのメンションと、自分宛ての DM・グループ DM です（自分の投稿は除きます）。そのうち未読のものを並べます。スレッドの返信と、既読かどうか分からないものも、見落とさないように並べます。`@here`・`@channel`・ユーザーグループ宛ては含みません。
+Click Actions at the bottom of the window to see the actions for the selected row. To open Actions with a key, use the shortcut set in Raycast.
 
-検索欄では、次の書き方が使えます。
+### Read the thread leading up to a message
 
-| 書き方                                                        | 意味                                         |
-| ------------------------------------------------------------- | -------------------------------------------- |
-| `in:#チャンネル名`                                            | そのチャンネル。`in:@名前` は、その人との DM |
-| `from:@ハンドル`                                              | その人の投稿                                 |
-| `to:@ハンドル`                                                | その人宛て                                   |
-| `from:me`・`to:me`                                            | 自分の投稿、自分宛て                         |
-| `-from:@ハンドル`                                             | 頭に `-` を付けると、除外                    |
-| `after:`・`before:`・`on:`・`during:`・`has:`・`is:`・`with:` | Slack の検索の書き方のまま渡します           |
+1. Select a search result or an item under Mentions & DMs and press ⌘Return. The detail shows the channel name, then the sender, time, and text.
+2. The selected message stays at the top. Earlier messages from the same thread follow, newest first. Replies after the selected message and messages outside the thread are not included.
+3. If the detail says more messages remain, choose Load More Earlier Messages in Actions. Each load fetches 15 messages, up to 150 messages over 10 pages. Slack returns the oldest messages first, so while the fetch is incomplete the messages just before the selected one may be missing.
+4. To fetch again, choose Refresh Details. Slack Compass keeps fetched data for the same detail in memory for 2 minutes. Refresh Details fetches it again.
 
-`in:`などを打っている間は候補が先頭に出ます。この候補を使うで確定します。
+Reading earlier messages needs `channels:history`, `groups:history`, `im:history`, or `mpim:history`, depending on the conversation type. See [Required API scopes](reference.md#required-api-scopes). Without these scopes, the text of search results still appears. On a rate limit, wait until the time shown, then choose Refresh Details.
 
-画面下部のActionsをクリックすると、選んだ行の操作一覧が開きます。キーで開く場合はRaycast側の設定を使います。
+Reading a detail does not mark the message as handled. The same actions work in a search within one channel.
 
-### 詳細でスレッドの経緯を読む
+### Search by scope and sender
 
-1. 検索結果または「メンション・DM」の投稿を選び、⌘Returnで詳細を開きます。チャンネル名の下に、送信者・日時・本文を分けて表示します。
-2. 選択した投稿を最上段に保ち、同じスレッドの過去投稿を下へ新しい順に並べます。選択した投稿より後の返信や、スレッド外の投稿は含みません。
-3. 「取得途中」と表示されたら、Actionsの「過去の投稿をさらに取得 / Load More Earlier Messages」で続きを読みます。1回15件、最大150件・10ページです。Slackの応答は古い投稿からなので、取得途中では直前の投稿がまだ含まれない場合があります。
-4. 再取得する場合は「詳細を更新 / Refresh Details」を選びます。同じ詳細の取得済みデータは2分間だけメモリに保持し、詳細更新では取り直します。
+In Actions, choose Choose Search Filters. You can pick All, Favorite Channels, a section, or channels, and you can also pick a sender. Choose Show Messages to search even with no search term. For sections and multiple memberships, see [Choosing a search scope](search-scopes.md).
 
-過去投稿の取得には、会話の種類に応じて`channels:history`・`groups:history`・`im:history`・`mpim:history`が必要です。[権限の追加方法](reference.md)を参照してください。権限がなくても検索結果の本文は表示します。回数制限では表示された時刻まで待ってから詳細を更新してください。
+### Find channels from the people in them
 
-詳細を読むだけでは対応済みにせず、AIへ本文を送ることもありません。チャンネル内検索でも同じ操作が使えます。返信待ちのAI説明画面はこの表示の対象外です。
+- **Find channels a person is in:** Search for the person in Search Slack, choose View Channels with This Person, filter by channel name or alias, and open the channel in Slack. The list covers public channels and private channels you have joined. Archived channels are excluded. This is different from `from:`, which searches post history.
+- **Find channels several people share:** In Joined Channels, choose Add Person, then select a person. The list shows only channels that all selected people have joined. You can select up to 5 people, and you can select yourself. Remove Person removes one person. Reset People goes back to the first person.
+- **Find who is in a channel:** On a channel row, choose View Members, filter by name or handle, then open Slack, write a message, or view the channels that person is in. Bots appear as "Bot". IDs whose names cannot be loaded appear as "Status Unknown". Neither type shows DM or joined-channel actions.
+- **Start from a message:** On a message, choose View Channels with Sender or View Channel Members. These actions do not appear when the sender is unknown or for DMs and group DMs.
+- **Write or search in the channel you found:** In Joined Channels, choose Write to open the post form. Choose Search in This Conversation to open a message search for that conversation. You can also open the reply form. When you go back, your search term and selected row in Search Slack are still there.
+- **Fetch membership again:** Choose Refresh. The screen shows the fetch time, and Slack Compass reuses a complete result for up to 2 minutes. Refresh never uses the cache. When a result from earlier stays on screen during a refresh or after a failure, the screen shows "Previous results". A failure is never treated as zero members. On a rate limit, wait the number of seconds shown and try again.
 
-### 範囲と投稿者を選んで検索する
+Typing in a list filters the data already loaded and supports fuzzy matching. Even an empty list lets you change the filter or choose Refresh from Actions. If you change the authentication settings, reopen Search Slack.
 
-Actionsの「検索条件を選ぶ」で、すべて・お気に入りチャンネル・セクション・チャンネルを選び、投稿者も指定できます。「メッセージを表示」で検索語なしでも検索します。返信待ちにも同じ条件を引き継ぎます。セクションの作成や複数所属の手順は[検索範囲の選び方](search-scopes.md)を参照してください。
+### Conversation and person actions
 
-### 参加している人からチャンネルを探す
+| Action                                              | What it does                                                                          |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Open in Slack                                       | Opens the item in Slack                                                               |
+| Show Details / Hide Details                         | Shows or hides the type, handle, aliases, and other loaded data. Fetches nothing more |
+| Write                                               | Opens the post form. On a person, it sends a DM                                       |
+| Filter by This Conversation / Filter by This Person | Filters by the conversation or person                                                 |
+| Add to Favorites / Remove from Favorites            | Adds or removes a favorite                                                            |
+| Edit Aliases                                        | Sets aliases                                                                          |
+| Edit Dictionary                                     | Edits the name replacement dictionary                                                 |
+| Copy ID                                             | Copies the ID                                                                         |
+| Reset Ranking                                       | Resets the usage-based ordering of that row                                           |
 
-- **ある人がいるチャンネルを探す**：Slack Hubで人名を検索 → 人のActionsでこの人がいるチャンネルを表示 → チャンネル名や別名で絞り込む → Slackで開く。対象は公開チャンネルと、自分も参加する非公開チャンネルです。アーカイブは除きます。投稿履歴を調べるfrom:とは別の検索です。
-- **複数人がいる場所を探す**：参加チャンネル画面 → 人を追加 → 人を選ぶ → 選んだ全員が参加するチャンネルだけを表示。最大5人で、「自分」も選べます。人を外すで1人を外し、選択をリセットで最初の人へ戻します。
-- **チャンネルの参加者を探す**：チャンネル行のActionsで参加者を表示 → 名前・ハンドルで絞り込む → Slackで開く、投稿する、この人がいるチャンネルを表示。ボットは「ボット」、名前を取得できないIDは「状態未確認」と表示し、この2種類にはDM・参加チャンネル操作を出しません。
-- **メッセージから探す**：メッセージのActionsでView Channels with Sender、またはView Channel Members。送信者を特定できない場合やDM・グループDMでは、該当する操作を出しません。
-- **見つけたチャンネルで書く・検索する**：参加チャンネル画面の投稿するで投稿フォーム、この会話内を検索で専用のメッセージ検索画面を開きます。返信フォームも開けます。戻ると元のSlack Hubの検索語と選択行が残ります。
-- **参加状況を取り直す**：「更新」。取得時刻を表示し、2分以内の完全な結果は再利用します。「更新」ではキャッシュを使いません。同じ条件の更新中・失敗時に以前の結果を残す場合は「前回取得」と表示します。失敗は参加者ゼロとして扱いません。回数制限では表示した秒数を待ってから再試行してください。
+### Message actions
 
-一覧の名前入力は取得済みデータを絞り込み、ファジー検索に対応します。空の一覧でもActionsから参加条件の変更と「更新」を実行できます。認証設定を変更した場合はSlack Hubを開き直してください。
+| Action                                         | What it does                                                                 |
+| ---------------------------------------------- | ---------------------------------------------------------------------------- |
+| Show Details / Hide Details                    | Shows or hides the full text in the sidebar. Reading does not mark it opened |
+| Open in Slack                                  | Opens the message in Slack                                                   |
+| Reply in Thread                                | Replies in the thread                                                        |
+| Mark as Handled / Unmark as Handled            | Adds or removes the "handled" mark                                           |
+| Filter by This Conversation / Filter by Sender | Filters by the conversation or sender                                        |
+| Open Permalink in Browser                      | Opens the message link in your browser                                       |
+| Copy Permalink                                 | Copies the message link                                                      |
 
-### 会話・人の操作
+Rows marked as opened or handled leave your Mentions & DMs list the next time you open Search Slack. Marks expire after 14 days. A row also gets the "opened" mark after your reply is sent.
 
-| Actionsの操作名                                     | できること                                                               |
-| --------------------------------------------------- | ------------------------------------------------------------------------ |
-| Slackで開く                                         | Slackで開く                                                              |
-| 詳細を表示 / 詳細を閉じる                           | 取得済みの名前・種別・ハンドル・別名などを表示・非表示。追加取得はしない |
-| 投稿する                                            | 投稿フォームを開く。人の行はDM                                           |
-| Filter by This Conversation / Filter by This Person | 会話・人で絞り込む                                                       |
-| Add to Favorites / Remove from Favorites            | お気に入りに入れる・外す                                                 |
-| Edit Aliases                                        | 別名を付ける                                                             |
-| Edit Dictionary                                     | 名前の置き換え辞書を編集する                                             |
-| Copy ID                                             | IDをコピーする                                                           |
-| Reset Ranking                                       | その行の利用頻度による並び順をリセットする                               |
+In saved Mentions & DMs results, long text is a preview of the first 300 characters. Reload Search (⌘R) fetches the full text. Regular message search shows the full text.
 
-### メッセージの操作
+### Reload, swap, and post
 
-| Actionsの操作名                                | できること                                                           |
-| ---------------------------------------------- | -------------------------------------------------------------------- |
-| 詳細を表示 / 詳細を閉じる                      | 全文をサイドバーに出す・閉じる。読むだけなら「開いた」の印は付かない |
-| Slackで開く                                    | 投稿の位置をSlackで開く                                              |
-| スレッドに返信                                 | スレッドに返信する                                                   |
-| 対応済みにする / 対応済みを解除                | 「対応済み」の印を付ける・外す                                       |
-| Filter by This Conversation / Filter by Sender | 会話・送信者で絞り込む                                               |
-| Open Permalink in Browser                      | メッセージのリンクをブラウザで開く                                   |
-| Copy Permalink                                 | メッセージのリンクをコピーする                                       |
+- **Swap Conversations and Messages:** swaps the order of conversations and messages.
+- **Reload Search:** fetches search results, Mentions & DMs, read positions, and unread counts for favorites again.
+- **Reload Conversations and People:** fetches the lists manually. Background refresh runs every 30 minutes by default. You can choose 30 Minutes, 1 Hour, 3 Hours, or Off in the settings. Conversations and membership refresh at the chosen frequency. People refresh after a day. If a fetch is interrupted or rate limited, Slack Compass keeps the saved list and resumes where it stopped.
+- **Membership filter:** the dropdown at the right of the search bar offers All, Joined, and Not Joined.
+- **Post and Open in Slack:** posts from the form and opens the post in Slack.
+- **Preview:** shows the message before you post it.
 
-「開いた」「対応済み」の印が付いた行は、Slack Hub を開き直すと、自分宛ての一覧から外れます。印は14日で消えます。返信を送れたときも、その行に「開いた」の印が付きます。
+### Shortcuts defined by Slack Compass
 
-自分宛ての保存結果では、長い本文は先頭300文字のプレビューです。検索を更新（⌘R）で取り直すと全文を表示します。通常のメッセージ検索では全文を表示します。
+These keys are defined by the extension, and you can pick the same actions from Actions. For the standard keys that Raycast assigns, check what the screen shows.
 
-### 再読み込み・並び替え・投稿
+| Key       | Action                                           |
+| --------- | ------------------------------------------------ |
+| Return    | Open the selected item in Slack                  |
+| ⌘Return   | Show or hide details in the list                 |
+| ⌘N        | Open the Write form for a conversation or person |
+| Tab / ⌘F  | Filter by conversation or person                 |
+| Shift+Tab | Swap Conversations and Messages                  |
+| ⌘⇧R       | Reload Conversations and People                  |
+| ⌘⇧D       | Mark or unmark as handled                        |
+| ⌘⇧Return  | Reply in Thread                                  |
+| ⌘D        | Edit Dictionary                                  |
+| ⌘⇧P       | Preview the post                                 |
+| Control+X | Delete a dictionary rule                         |
 
-- 会話とメッセージを入れ替え：会話とメッセージの並びを入れ替える。
-- 検索を更新：検索、自分宛て、既読位置、お気に入りの未読を取り直す。
-- 会話と人の一覧を更新：手動で一覧を取り直す。背景更新は初期設定で30分おき。設定から30分・1時間・3時間・オフを選べる。会話・参加状況は選んだ頻度、人は1日経過したものを更新する。取得途中や回数制限中は、保存済みの一覧を残して続きから再開する。
-- 参加状況の切り替え：検索欄の右のドロップダウンで、すべて・参加中・未参加を選ぶ。
-- 投稿してSlackで開く：フォームから投稿してSlackで開く。
-- Preview：投稿前の本文を見る。
+Write messages in Markdown. Choose mentions in the separate Mention field, not in the message text. Posts appear in Slack as you, not as a bot.
 
-### Slack Hubが定義するショートカット
+## Not supported
 
-以下は拡張のコードで定義しているキーです。Actionsからも同じ操作を選べます。Raycastが割り当てる標準キーは、画面の表示を確認してください。
-
-| キー      | 操作                               |
-| --------- | ---------------------------------- |
-| Return    | 一覧で選択した対象をSlackで開く    |
-| ⌘Return   | 一覧の詳細を表示・非表示           |
-| ⌘N        | 会話・人への投稿するフォームを開く |
-| Tab / ⌘F  | 会話・人で絞り込む                 |
-| Shift+Tab | 会話とメッセージの並びを入れ替える |
-| ⌘⇧R       | 会話と人の一覧を取り直す           |
-| ⌘⇧D       | 対応済みの印を付け外しする         |
-| ⌘⇧Return  | スレッドに返信する                 |
-| ⌘D        | 名前の置き換え辞書を編集する       |
-| ⌘⇧P       | 投稿のプレビューを見る             |
-| Control+X | 辞書の規則を削除する               |
-
-本文は Markdown で書けます。メンションは、本文とは別の欄で選びます。投稿は、あなた自身の投稿として Slack に出ます（ボットの投稿ではありません）。
-
-## 返信待ちとJevの並べ替えを試す
-
-開発版では、表示切替の「返信待ち」から24時間・7日の候補を確認できます。AIは任意です。[使い方・必要な権限・送信先](reply-priority.md)を確認してください。実Jevの品質基準はまだ満たしておらず、一部の実画面試験も進行中です。
-
-## 未対応の機能
-
-下書き、メッセージ前後の履歴・スレッド閲覧、リアクション、ブックマーク、Listsは使えません。対応状況と再開時の条件は[対応予定](roadmap.md)にまとめています。
-
-検索結果の全文表示、投稿・スレッド返信、自分宛ての対応済み操作は引き続き使えます。
+Drafts, history before or after a message outside its thread, reactions, bookmarks, and Lists are not available. Full-text results, posting, thread replies, and handling messages addressed to you still work. To follow these features, see [GitHub Issues](https://github.com/shinonomelon/raycast-slack-hub/issues).

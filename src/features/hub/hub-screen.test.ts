@@ -1,4 +1,3 @@
-import * as i18n from "../../shared/i18n.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -43,7 +42,6 @@ const moduleExports = {} as {
   ) => Section;
 };
 runInNewContext(compiled, {
-  ...i18n,
   exports: moduleExports,
   require: (name: string) => {
     assert.equal(name, "react/jsx-runtime");
@@ -75,7 +73,7 @@ test("Hubは条件変更直後と取得待ちの間に前の条件のメッセ�
   assert.deepEqual(render(previous, "bravo", "status").rows, []);
   const current = render({ query: "bravo", hits: [b] }, "bravo");
   assert.deepEqual(current.rows, [b]);
-  assert.equal(current.section?.props.subtitle, "in:bravo · 1 件");
+  assert.equal(current.section?.props.subtitle, "in:bravo · 1 results");
 });
 
 test("Hubは同じ検索式の再取得中にはその検索結果を表示できる", () => {
@@ -111,7 +109,6 @@ function orderHarness() {
   assert.ok(onApply);
   type Request = { text: string; section: string };
   const context = {
-    ...i18n,
     searchText: "",
     messageMode: false,
     override: undefined as unknown,
@@ -229,12 +226,8 @@ function channelEntryHarness(
         title &&
         ts.isJsxAttribute(title) &&
         title.initializer &&
-        ts.isJsxExpression(title.initializer) &&
-        title.initializer.expression &&
-        ts.isCallExpression(title.initializer.expression) &&
-        ts.isStringLiteral(title.initializer.expression.arguments[0]) &&
-        title.initializer.expression.arguments[0].text ===
-          "このチャンネルでメッセージを検索"
+        ts.isStringLiteral(title.initializer) &&
+        title.initializer.text === "Search Messages in This Channel"
       ) {
         const action = node.attributes.properties.find(
           (attribute) =>

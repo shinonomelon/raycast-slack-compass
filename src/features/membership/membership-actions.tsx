@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import { Action, Icon, openExtensionPreferences } from "@raycast/api";
 export function MembershipActions({
   authenticated,
@@ -9,20 +8,16 @@ export function MembershipActions({
 }) {
   return authenticated ? (
     <>
+      <Action title="Refresh" icon={Icon.ArrowClockwise} onAction={refresh} />
       <Action
-        title={t("Refresh")}
-        icon={Icon.ArrowClockwise}
-        onAction={refresh}
-      />
-      <Action
-        title={t("Open Extension Preferences")}
+        title="Open Extension Preferences"
         icon={Icon.Gear}
         onAction={openExtensionPreferences}
       />
     </>
   ) : (
     <Action
-      title={t("Open Extension Preferences")}
+      title="Open Extension Preferences"
       icon={Icon.Gear}
       onAction={openExtensionPreferences}
     />

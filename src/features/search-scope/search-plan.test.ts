@@ -6,10 +6,7 @@ import {
   validateScopeSelection,
   type SearchScope,
 } from "./model.ts";
-import {
-  createMessageSearchPlan,
-  createReplySearchPlan,
-} from "./search-plan.ts";
+import { createMessageSearchPlan } from "./search-plan.ts";
 import type { FilterSource } from "../search/query.ts";
 const library = {
   version: 1 as const,
@@ -135,27 +132,6 @@ test("条件なしは既存resolverと1文字ガードを維持する", () => {
     createMessageSearchPlan({ text: "a", scope, sources, selfId: "U1" })
       .canSearch,
     false,
-  );
-});
-test("返信待ちの限定範囲ではDMを作らず全体の両検索に投稿者を付ける", () => {
-  assert.deepEqual(createReplySearchPlan(scope, "U1", "2026-10-01"), [
-    "<@U1> in:<#C1> after:2026-10-01 from:<@U2>",
-    "<@U1> in:<#C2> after:2026-10-01 from:<@U2>",
-  ]);
-  assert.deepEqual(
-    createReplySearchPlan({ ...scope, channelIds: "all" }, "U1", "2026-10-01"),
-    ["<@U1> after:2026-10-01 from:<@U2>", "to:me after:2026-10-01 from:<@U2>"],
-  );
-  assert.deepEqual(
-    createReplySearchPlan({ ...scope, channelIds: [] }, "U1", "2026-10-01"),
-    [],
-  );
-  assert.throws(() =>
-    createReplySearchPlan(
-      { ...scope, senderId: "U2 other" },
-      "U1",
-      "2026-10-01",
-    ),
   );
 });
 

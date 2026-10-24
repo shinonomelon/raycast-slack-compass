@@ -1,53 +1,50 @@
-# 設定・保存データ・トラブル対応
+# Settings, stored data, and troubleshooting
 
-[READMEへ戻る](../README.md)
+[Back to the README](../README.md)
 
-## APIと必要な権限
+## Required API scopes
 
-Slackアプリに許可する操作をスコープと呼びます。使うAPIごとに、次の権限が必要です。
+A scope is a permission you give your Slack app. Each API that Slack Compass calls needs these User Token Scopes.
 
-| 機能                                     | 公式API                                          | User Token Scope                                                                       |
-| ---------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| 自分とワークスペースの確認               | `auth.test`                                      | 追加スコープ不要                                                                       |
-| 公開・非公開チャンネル、グループDMの一覧 | `conversations.list`                             | `channels:read`・`groups:read`・`mpim:read`                                            |
-| 参加中の公開チャンネル                   | `users.conversations`                            | `channels:read`                                                                        |
-| 人の参加チャンネル・全員の共通チャンネル | `users.conversations`                            | `channels:read`・`groups:read`                                                         |
-| チャンネルの参加者                       | `conversations.members`                          | `channels:read`・`groups:read`                                                         |
-| 人の一覧                                 | `users.list`                                     | `users:read`                                                                           |
-| メッセージ検索、自分宛て                 | `search.messages`                                | `search:read`                                                                          |
-| 既読位置                                 | `conversations.info`                             | `channels:read`・`groups:read`・`im:read`・`mpim:read`（会話の種類による）             |
-| 投稿、スレッド返信                       | `chat.postMessage`                               | `chat:write`                                                                           |
-| 詳細でのスレッドの過去投稿               | `conversations.replies`                          | `channels:history`・`groups:history`・`im:history`・`mpim:history`（会話の種類による） |
-| 返信待ちの会話・スレッド確認             | `conversations.history`・`conversations.replies` | `im:history`・`channels:history`・`groups:history`・`mpim:history`（会話の種類による） |
-| 人へのDMの開始                           | `conversations.open`                             | `im:write`                                                                             |
+| Feature                                        | Official API            | User Token Scope                                                                                  |
+| ---------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------- |
+| Check you and the workspace                    | `auth.test`             | No extra scope                                                                                    |
+| List public and private channels and group DMs | `conversations.list`    | `channels:read`, `groups:read`, `mpim:read`                                                       |
+| Joined public channels                         | `users.conversations`   | `channels:read`                                                                                   |
+| A person's joined channels, channels in common | `users.conversations`   | `channels:read`, `groups:read`                                                                    |
+| Channel members                                | `conversations.members` | `channels:read`, `groups:read`                                                                    |
+| List people                                    | `users.list`            | `users:read`                                                                                      |
+| Message search, Mentions & DMs                 | `search.messages`       | `search:read`                                                                                     |
+| Read position                                  | `conversations.info`    | `channels:read`, `groups:read`, `im:read`, `mpim:read` (depends on conversation type)             |
+| Post, reply in a thread                        | `chat.postMessage`      | `chat:write`                                                                                      |
+| Earlier thread messages in details             | `conversations.replies` | `channels:history`, `groups:history`, `im:history`, `mpim:history` (depends on conversation type) |
+| Start a DM with a person                       | `conversations.open`    | `im:write`                                                                                        |
 
-通常のメッセージ検索には履歴権限は不要です。詳細で過去のスレッド投稿を読む場合に追加してください。
+Regular message search does not need the history scopes. Add them only if you want to read earlier thread messages in details.
 
-スコープを追加したらアプリを再インストールし、トークンが変わった場合はRaycastの設定も更新します。メールアドレスを取得しないので`users:read.email`は不要です。
+After you add a scope, reinstall the app. If the token changes, update it in Raycast settings too. Slack Compass does not fetch email addresses, so `users:read.email` is not needed.
 
-## 保存するデータ
+## Stored data
 
-| 保存先                                           | 内容                                                                                                                       |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| Raycastのpassword設定                            | User OAuth Tokenと任意のTypeSafe APIキー。各サービスの通信にだけ渡し、ログやキャッシュには保存しません                     |
-| RaycastのCache（ワークスペースID・ユーザーID別） | 会話・人の一覧、参加中の公開チャンネル、既読位置、行を開いた時刻、対応済みの印、自分宛ての前回結果、お気に入りの未読の目安 |
-| 認証用Cache                                      | `auth.test`の結果。キーはトークンのハッシュで、生のトークンは含みません                                                    |
-| 共通Cache                                        | 検索を止める期限、よく開く順の記録                                                                                         |
-| 拡張の`prefs.json`                               | お気に入り、別名、置き換え辞書、参加中の絞り込み                                                                           |
+| Location                                     | Contents                                                                                                                                                                              |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Raycast password preference                  | The User OAuth Token. It is sent only to Slack and never saved in logs or caches                                                                                                      |
+| Raycast Cache (per workspace ID and user ID) | The conversation and people lists, joined public channels, read positions, times rows were opened, handled marks, the last Mentions & DMs result, and an estimate of unread favorites |
+| Authentication Cache                         | The `auth.test` result. The key is a hash of the token, so the raw token is not included                                                                                              |
+| Shared Cache                                 | The deadline for pausing search, and the record used to order frequently opened items                                                                                                 |
+| The extension's `prefs.json`                 | Favorites, aliases, the replacement dictionary, and the joined filter                                                                                                                 |
 
-Cacheと保存ファイルは`~/Library/Application Support/com.raycast.macos/extensions/slack-hub/`配下にあります。Cacheは暗号化されません。自分宛ての前回結果には本文の先頭300字までが含まれます。お気に入りの未読結果には本文を保存しません。
+The cache and saved files are in `~/Library/Application Support/com.raycast.macos/extensions/slack-compass/`. The cache is not encrypted. The last Mentions & DMs result includes up to the first 300 characters of each message. The unread result for favorites does not store message text.
 
-返信待ちでは候補本文・履歴確認・続きの取得位置・AI結果を5分保存します。除外・延期の印は14日で破棄します。期限切れは読み込み時に削除します。期間や認証設定が変わった場合は以前の結果を使いません。[返信待ちの使い方](reply-priority.md)も参照してください。
+Slack Compass keeps a person's joined channels and a channel's members in memory for 2 minutes. It separates them by authenticated client and by person, and it stores only fully fetched results. Refresh does not reuse them.
 
-人の参加チャンネルとチャンネル参加者はメモリ内で2分間再利用します。認証クライアントと本人ごとに分け、完全に取得した結果だけを保存します。「更新」では再利用せず取り直します。
+It converts message text from Markdown to Block Kit and plain notification text in memory. It uses no temporary files or external processes for posting. It does not delete CLI settings, keys, or temporary files left by earlier versions.
 
-投稿本文はメモリ内でMarkdownからBlock Kitと通知用textへ変換します。投稿用の一時ファイルや外部プロセスは使いません。旧版のCLI設定・鍵・一時ファイルは自動削除しません。
+On first launch, favorites, aliases, and the dictionary start empty. Slack Compass does not read settings from other extensions or old caches that cannot be tied to an account. It uses its own settings and the per-account caches.
 
-初回は空のお気に入り・別名・辞書から始めます。他の拡張の設定や、アカウントを特定できない古いキャッシュは読み込みません。現在のSlack Hub自身の設定と、アカウント別キャッシュは引き続き使います。
+## Update and uninstall
 
-## 更新と削除
-
-更新は拡張のリポジトリだけで行います。
+Update the extension from its repository folder.
 
 ```bash
 cd ~/raycast-slack-hub
@@ -56,47 +53,45 @@ npm ci
 npm run dev
 ```
 
-取り込みが終わったらControl+Cで止めます。Raycastの設定は更新しても残ります。
+When the import finishes, stop the command with Control+C. Your Raycast settings stay in place after an update.
 
-削除する場合はRaycastの設定→ExtensionsでSlack Hubをアンインストールします。ソースのフォルダも削除できます。拡張の保存フォルダが残っている場合、削除すると設定・Cacheと旧版の保存データが消えます。トークンを失効させる場合は[Slackのアプリ管理画面](https://api.slack.com/apps)でアプリのトークンを取り消すか、不要なアプリを削除します。
+To uninstall, remove Slack Compass in Raycast Settings → Extensions. You can also delete the source folder. If the extension's saved-data folder remains, deleting it removes your settings, cache, and data from earlier versions. To revoke the token, revoke it for your app in the [Slack app dashboard](https://api.slack.com/apps), or delete the app you no longer need.
 
-## 背景更新の頻度を選ぶ
+## Choose a background refresh frequency
 
-Raycastの設定 → Extensions → Slack Hub → `Background refresh frequency / 背景更新の頻度`で選びます。
+Open Raycast Settings → Extensions → Slack Compass → **Background Refresh Frequency**.
 
-| 設定 | 動作 |
-|---|---|
-| 30分 | 初期設定。チャンネルと参加状況を30分間隔で更新する |
-| 1時間 | チャンネルと参加状況を1時間間隔で更新する |
-| 3時間 | チャンネルと参加状況を3時間間隔で更新する |
-| オフ | 背景では認証も取得も行わない。手動更新と初回取得は使える |
+| Setting    | Behavior                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------- |
+| 30 Minutes | Default. Refreshes channels and membership every 30 minutes                                             |
+| 1 Hour     | Refreshes channels and membership every hour                                                            |
+| 3 Hours    | Refreshes channels and membership every 3 hours                                                         |
+| Off        | Makes no authentication or fetch calls in the background. Manual refresh and the first fetch still work |
 
-メンバー一覧は24時間経過した時に更新します。自分宛て・返信待ち・メッセージ詳細のキャッシュ期限は、この設定では変わりません。設定変更は次の背景起動で読み直します。OSや省電力の影響で起動が遅れることがあります。
+The people list refreshes after 24 hours. This setting does not change the cache lifetimes for Mentions & DMs and message details. A change takes effect at the next background run. The operating system or power saving can delay a run.
 
-更新不要な起動ではSlackに通信しません。一覧の取得途中で停止した場合は、成功済みのページと続きの位置を最大24時間だけ保存します。完成するまで以前の一覧を表示します。Slackが続きの位置を無効にした場合は取り直します。
+A run that does not need to refresh makes no Slack calls. If a list fetch stops partway, Slack Compass saves the completed pages and the continuation position for up to 24 hours. It shows the previous list until the new one is complete. If Slack invalidates the continuation position, Slack Compass starts over.
 
-## 回数制限中の動作
+## Rate limits
 
-APIごとに送信間隔を空け、429を受けた場合は`Retry-After`まで画面と背景更新の両方で停止します。停止していない別のAPIは利用できます。待機中も保存済みの結果は表示し、未取得の候補は確認済みとして扱いません。投稿は自動再試行しません。
+Slack Compass spaces out requests for each API. After a 429 response, it pauses that API in both the UI and background refresh until `Retry-After`. Other APIs that are not paused keep working. While it waits, it shows saved results and does not treat candidates it has not fetched as checked. It does not retry posts automatically.
 
-履歴・スレッド取得は、初期設定でそれぞれ毎分1回に抑えます。使用するSlackアプリが内部利用またはSlack Marketplace承認済みの区分に該当すると確認できた場合に限り、`Slack API distribution`の確認済み設定を選べます。Raycast Storeへの掲載だけでは、この区分は変わりません。[Slackの公式説明](https://docs.slack.dev/reference/methods/conversations.replies/)を確認してください。
+By default, history and thread fetches are limited to one request per minute each. If you confirm that your Slack app is internal to your workspace or approved for the Slack Marketplace, you can choose **Verified Internal or Marketplace (1.3 Seconds)** under **Slack API Distribution**. Listing in the Raycast Store does not change this status. See [Slack's documentation](https://docs.slack.dev/reference/methods/conversations.replies/).
 
-## 困ったとき
+## Troubleshooting
 
-- **トークン未設定／認証失敗**：Slack Access Tokenに自分のUser OAuth Tokenを入力し、Slack Hubを開き直します。`invalid_auth`・`not_authed`・`token_revoked`・`token_expired`・`account_inactive`ならトークンやアカウントの状態を確認します。以前の結果があれば保存済みの一覧を表示しますが、認証が成功するまで新しい取得と投稿は止めます。
-- **`missing_scope`**：表示された必要な権限をUser Token Scopesに追加し、アプリを再インストールします。トークンが変わった場合はRaycastの設定も更新します。
-- **回数制限／検索の時間切れ**：表示された待機期間の後にActionsの検索を更新で取り直します。429応答ではRetry-Afterを使い、そのAPIメソッドへの問い合わせを止めます。投稿は自動再試行しません。
-- **「送れたか未確認です」**：投稿が届いている可能性があります。トーストのOpen Conversation／Open Parent MessageでSlackを開き、届いたかを確認してください。再送すると同じ投稿が二重になることがあります。
-- **既読の位置が分からない**：Slackの応答に`last_read`がない会話は既読不明として扱います。取得失敗を未読ゼロとして表示しません。
+- **No token or authentication failed:** Enter your User OAuth Token in Slack Access Token and open Search Slack again. For `invalid_auth`, `not_authed`, `token_revoked`, `token_expired`, or `account_inactive`, check the state of the token and the account. If earlier results exist, Slack Compass shows the saved lists. It stops new fetches and posting until authentication succeeds.
+- **`missing_scope`:** Add the scope shown to User Token Scopes and reinstall the app. If the token changes, update it in Raycast settings too.
+- **Rate limit or search timeout:** After the wait period shown, choose Reload Search in Actions. For a 429 response, Slack Compass uses Retry-After and stops calls to that API method. It does not retry posts automatically.
+- **"Delivery has not been confirmed":** The post may have arrived. Use Open Conversation or Open Parent Message in the toast to open Slack and check. Sending again can post the same message twice.
+- **Unknown read position:** A conversation whose Slack response has no `last_read` is treated as unknown. A failed fetch is never shown as zero unread.
 
-解決しない場合は[GitHub Issues](https://github.com/shinonomelon/raycast-slack-hub/issues)に、操作手順と画面のエラーを報告してください。トークン・実際の本文・非公開の会話名は含めないでください。
+If a problem remains, open a [GitHub issue](https://github.com/shinonomelon/raycast-slack-hub/issues) with the steps you took and the error shown on screen. Do not include tokens, real message text, or private conversation names.
 
-## 開発する
+## Development
 
-テスト・ビルド・コードの配置は[開発手順](development.md)を参照してください。
+See [Development](../README.md#development) in the README for tests, builds, and request metrics.
 
-## 旧版の保存データ
+## Data from earlier versions
 
-Slack Drafts、履歴・リアクションの検証待ち画面、ブックマーク・Listsのコードは削除しています。既存の`drafts.json`などは自動で削除せず、この版では読み込みません。保存フォルダを丸ごと削除すると、お気に入りや対応済みの印も失われます。
-
-返信待ち・Jevは開発版に復元しています。旧キー設定が残っていても自動送信しません。保存結果は認証・期間・モデル・判定文と期限を照合して使います。残る検証は[対応予定](roadmap.md)で確認できます。
+The code for Slack drafts, history and reaction screens that were waiting for verification, bookmarks, and Lists has been removed. Slack Compass does not delete existing files such as `drafts.json` and does not read them. If you delete the whole saved-data folder, you also lose your favorites and handled marks.

@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import { normalize, orderItems, rankItems, type Item } from "./search.ts";
 export type Modifier = "from" | "to" | "in";
 export type FilterToken = {
@@ -123,7 +122,7 @@ export function candidatesFor(
             ...base,
             token: SELF_TOKEN,
             id: selfId,
-            title: t("自分"),
+            title: "You",
             kind: "self",
           },
         ]
@@ -221,7 +220,7 @@ export function resolveQuery(
       filters.push({
         modifier: token.modifier,
         negated: token.negated,
-        label: t("自分"),
+        label: "You",
       });
       continue;
     }

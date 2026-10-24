@@ -1,4 +1,3 @@
-import { t } from "../shared/i18n.ts";
 // ID から表示名を引く純粋な部品。@raycast/api を読み込まないので、node のテストから動かせる
 import type { Hit } from "./hits.ts";
 import type { NameLookup } from "./mrkdwn.ts";
@@ -32,7 +31,7 @@ export function buildNames(
     if (hit.channelKind === "mpim") {
       return hit.channelName
         ? mpimName(hit.channelName)
-        : (channelName(hit.channelId) ?? t("グループDM"));
+        : (channelName(hit.channelId) ?? "Group DM");
     }
     return `#${hit.channelName ?? channelName(hit.channelId) ?? hit.channelId}`;
   };
@@ -40,7 +39,7 @@ export function buildNames(
   const sender = (hit: Hit) =>
     (hit.userId && byPerson.get(hit.userId)?.displayName) ||
     hit.username ||
-    t("不明");
+    "Unknown";
   const handleOf = (userId?: string) =>
     userId ? byPerson.get(userId)?.handle : undefined;
   return { lookup, conversationLabel, sender, handleOf };

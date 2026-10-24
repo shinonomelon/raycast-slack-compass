@@ -1,4 +1,3 @@
-import * as i18n from "../../shared/i18n.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -21,11 +20,8 @@ const initial: ChannelLibrary = {
 };
 
 // 実際の親画面の管理コールバックとフォームを動かし、フォームへ戻った後の再オープンを確認する。
-function harness(parent: "hub" | "reply-priority") {
-  const path =
-    parent === "hub"
-      ? "src/features/hub/hub-screen.tsx"
-      : "src/features/reply-priority/reply-priority-screen.tsx";
+function harness() {
+  const path = "src/features/hub/hub-screen.tsx";
   const source = ts.createSourceFile(
     path,
     readFileSync(path, "utf8"),
@@ -69,8 +65,7 @@ function harness(parent: "hub" | "reply-priority") {
       require: () => ({ jsx, jsxs: jsx }),
       push: (node: Node) => pushed.push(node),
       SectionScreen: "SectionScreen",
-      library:
-        parent === "hub" ? { library: initial, mutate: mutation } : initial,
+      library: { library: initial, mutate: mutation },
       conversations: { data: [] },
       scopeControls: { conversations: [], onMutate: mutation },
       libraryRef: { current: initial },
@@ -95,33 +90,31 @@ function harness(parent: "hub" | "reply-priority") {
     {
       exports: formExports,
       require: (id: string) =>
-        id.endsWith("/i18n.ts")
-          ? i18n
-          : {
-              "react/jsx-runtime": { jsx, jsxs: jsx },
-              "@raycast/api": {
-                Action: "Action",
-                ActionPanel: "ActionPanel",
-                Form: Object.assign("Form", {
-                  Dropdown: Object.assign("Dropdown", { Item: "Item" }),
-                  Description: "Description",
-                }),
-                useNavigation: () => ({ pop: () => {} }),
-              },
-              react: {
-                useState: (initialValue: unknown) => {
-                  const index = cursor++;
-                  if (!(index in slots)) slots[index] = initialValue;
-                  return [
-                    slots[index],
-                    (value: unknown) => {
-                      slots[index] = value;
-                    },
-                  ];
+        ({
+          "react/jsx-runtime": { jsx, jsxs: jsx },
+          "@raycast/api": {
+            Action: "Action",
+            ActionPanel: "ActionPanel",
+            Form: Object.assign("Form", {
+              Dropdown: Object.assign("Dropdown", { Item: "Item" }),
+              Description: "Description",
+            }),
+            useNavigation: () => ({ pop: () => {} }),
+          },
+          react: {
+            useState: (initialValue: unknown) => {
+              const index = cursor++;
+              if (!(index in slots)) slots[index] = initialValue;
+              return [
+                slots[index],
+                (value: unknown) => {
+                  slots[index] = value;
                 },
-              },
-              "./model.ts": { DEFAULT_SEARCH_SCOPE, validateScopeSelection },
-            }[id],
+              ];
+            },
+          },
+          "./model.ts": { DEFAULT_SEARCH_SCOPE, validateScopeSelection },
+        })[id],
     },
   );
   function nodes(value: unknown): Node[] {
@@ -143,7 +136,7 @@ function harness(parent: "hub" | "reply-priority") {
     });
     lastForm = tree;
     const action = nodes(tree).find(
-      (node) => node.props.title === i18n.t("セクションを管理"),
+      (node) => node.props.title === "Manage Sections",
     )!;
     (action.props.onAction as () => void)();
     return pushed.at(-1)!;
@@ -161,46 +154,39 @@ function harness(parent: "hub" | "reply-priority") {
   };
 }
 
-for (const parent of ["hub", "reply-priority"] as const) {
-  test(`${parent}の条件フォームは管理画面で作成・更新後に戻って開き直すと最新一覧を渡す`, async () => {
-    const ui = harness(parent);
-    assert.equal(ui.open().props.library, initial);
-    const created = await ui.update({ id: "s1", name: "新規", channelIds: [] });
-    assert.equal(ui.open().props.library, created);
-    const renamed = await ui.update({
-      id: "s1",
-      name: "更新済み",
-      channelIds: ["C1"],
-    });
-    assert.equal(ui.open().props.library, renamed);
+test(`hubの条件フォームは管理画面で作成・更新後に戻って開き直すと最新一覧を渡す`, async () => {
+  const ui = harness();
+  assert.equal(ui.open().props.library, initial);
+  const created = await ui.update({ id: "s1", name: "新規", channelIds: [] });
+  assert.equal(ui.open().props.library, created);
+  const renamed = await ui.update({
+    id: "s1",
+    name: "更新済み",
+    channelIds: ["C1"],
   });
-}
+  assert.equal(ui.open().props.library, renamed);
+});
 
-test("英語の検索条件フォームは項目・操作を英語にし、管理後の利用者のセクション名は保持する", async () => {
-  try {
-    i18n.setLanguage("en");
-    const ui = harness("hub");
-    ui.open();
-    const form = ui.formNodes();
-    assert.equal(form[0].props.navigationTitle, "Choose Search Filters");
-    const titles = form.map((node) => node.props.title);
-    for (const title of [
-      "Apply",
-      "Show Messages",
-      "Clear Filters and Apply",
-      "Manage Sections",
-      "Search Scope",
-      "Sender",
-    ])
-      assert.ok(titles.includes(title), title);
-    const updated = await ui.update({
-      id: "s1",
-      name: "日本語のセクション",
-      channelIds: ["C1"],
-    });
-    assert.equal(ui.open().props.library, updated);
-    assert.equal(updated.sections[0].name, "日本語のセクション");
-  } finally {
-    i18n.setLanguage("ja");
-  }
+test("検索条件フォームは項目・操作を英語にし、管理後の利用者のセクション名は保持する", async () => {
+  const ui = harness();
+  ui.open();
+  const form = ui.formNodes();
+  assert.equal(form[0].props.navigationTitle, "Choose Search Filters");
+  const titles = form.map((node) => node.props.title);
+  for (const title of [
+    "Apply",
+    "Show Messages",
+    "Clear Filters and Apply",
+    "Manage Sections",
+    "Search Scope",
+    "Sender",
+  ])
+    assert.ok(titles.includes(title), title);
+  const updated = await ui.update({
+    id: "s1",
+    name: "日本語のセクション",
+    channelIds: ["C1"],
+  });
+  assert.equal(ui.open().props.library, updated);
+  assert.equal(updated.sections[0].name, "日本語のセクション");
 });

@@ -1,8 +1,8 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "slack-hub",
-  "title": "Slack Hub",
-  "description": "Search Slack conversations, people, and messages, find channels by their members, and post or reply using the official Slack Web API.",
+  "name": "slack-compass",
+  "title": "Slack Compass",
+  "description": "Find Slack channels, people, and messages, see who is in which channel, and post or reply without leaving Raycast.",
   "icon": "slack-hub-compass-v2.png",
   "author": "shinonomelon",
   "license": "MIT",
@@ -13,82 +13,57 @@
     {
       "name": "accessToken",
       "title": "Slack Access Token",
-      "description": "Set your User OAuth Token (xoxp-). See README for setup. 自分のUser OAuth Token（xoxp-）を設定してください。取得手順はREADMEを参照してください。",
+      "description": "Your Slack User OAuth Token (xoxp-). See the README for setup.",
       "type": "password",
       "required": true
     },
     {
       "name": "previousHandles",
       "title": "Previous Handles",
-      "description": "Previous handles, separated by commas, if you changed your Slack handle. ハンドルを変えたことがある人だけ、以前の名前をカンマ区切りで入力してください。",
+      "description": "If you changed your Slack handle, list your previous handles separated by commas.",
       "type": "textfield",
       "required": false
     },
     {
-      "name": "typesafeApiKey",
-      "title": "TypeSafe API Key (Optional)",
-      "description": "Optional: sort reply candidates with AI. Confirmation is required before sending text to TypeSafe. 任意設定です。本文をTypeSafeへ送る前に画面で確認します。",
-      "type": "password",
-      "required": false
-    },
-    {
-      "name": "language",
-      "title": "Language / 言語",
-      "description": "Choose the display language, then reopen Slack Hub. 表示言語を選び、Slack Hubを開き直してください。",
-      "type": "dropdown",
-      "required": true,
-      "default": "ja",
-      "data": [
-        {
-          "title": "日本語",
-          "value": "ja"
-        },
-        {
-          "title": "English",
-          "value": "en"
-        }
-      ]
-    },
-    {
       "name": "backgroundRefreshFrequency",
-      "title": "Background refresh frequency / 背景更新の頻度",
-      "description": "Channels follow this interval; people refresh every 24 hours. チャンネルはこの間隔、メンバーは24時間ごとに更新します。",
+      "title": "Background Refresh Frequency",
+      "description": "How often to refresh channels in the background. People refresh every 24 hours.",
       "type": "dropdown",
       "required": false,
       "default": "30m",
       "data": [
         {
-          "title": "30 minutes / 30分",
+          "title": "30 Minutes",
           "value": "30m"
         },
         {
-          "title": "1 hour / 1時間",
+          "title": "1 Hour",
           "value": "1h"
         },
         {
-          "title": "3 hours / 3時間",
+          "title": "3 Hours",
           "value": "3h"
         },
         {
-          "title": "Off / オフ",
+          "title": "Off",
           "value": "off"
         }
       ]
     },
     {
       "name": "slackApiDistribution",
-      "title": "Slack API distribution",
-      "description": "Select verified only after confirming your app is internal or Marketplace approved. 内部利用またはMarketplace承認済みと確認した場合だけ切り替えてください。",
+      "title": "Slack API Distribution",
+      "description": "Select Verified only if your Slack app is internal to your workspace or approved for the Slack Marketplace.",
       "type": "dropdown",
       "required": false,
       "default": "conservative",
       "data": [
         {
-          "title": "Unknown / 未確認 (60 seconds)",
+          "title": "Unknown (60 Seconds)",
           "value": "conservative"
         },
         {
-          "title": "Verified internal / Marketplace (1.3 seconds)",
+          "title": "Verified Internal or Marketplace (1.3 Seconds)",
           "value": "verified-internal"
         }
       ]
@@ -96,9 +71,9 @@
   ],
   "commands": [
     {
-      "name": "slack-hub",
-      "title": "Slack Hub",
-      "description": "Search Slack channels, people, and group DMs, open them in Slack, and write to them.",
+      "name": "search-slack",
+      "title": "Search Slack",
+      "description": "Search channels, people, group DMs, and messages, then open, post, or reply.",
       "mode": "view",
       "keywords": [
         "open channel",
@@ -116,8 +91,7 @@
   ],
   "dependencies": {
     "@raycast/api": "^2.4.0",
-    "@raycast/utils": "^2.3.2",
-    "@typesafe-ai/sdk": "0.6.0"
+    "@raycast/utils": "^2.3.2"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^2.2.0",

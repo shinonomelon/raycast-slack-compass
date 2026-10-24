@@ -4,7 +4,6 @@ import { DirectoryRefreshStore } from "./directory-refresh-store.ts";
 import { scanDirectory } from "./directory-pages.ts";
 import { acquireFileLease } from "./file-lease.ts";
 import { getApiCredentialKey, apiWithSource } from "./request-context.ts";
-import { t } from "../shared/i18n.ts";
 import { Cache, environment, showToast, Toast } from "@raycast/api";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cacheNamespace, type Identity, type Session } from "./identity.ts";
@@ -47,7 +46,7 @@ export type Directory<T> = {
 export const CONVERSATIONS: Directory<Conversation[]> = {
   key: "conversations",
   get label() {
-    return t("チャンネル");
+    return "Channels";
   },
   fetcher: listConversations,
   get maxAgeMs() {
@@ -57,7 +56,7 @@ export const CONVERSATIONS: Directory<Conversation[]> = {
 export const PEOPLE: Directory<Person[]> = {
   key: "people",
   get label() {
-    return t("メンバー");
+    return "People";
   },
   fetcher: listPeople,
   maxAgeMs: 24 * HOUR,
@@ -66,7 +65,7 @@ export const PEOPLE: Directory<Person[]> = {
 export const JOINED: Directory<string[]> = {
   key: "joined",
   get label() {
-    return t("参加中のチャンネル");
+    return "Joined channels";
   },
   fetcher: listJoinedChannelIds,
   get maxAgeMs() {
@@ -263,16 +262,16 @@ export function useDirectory<T>(dir: Directory<T>, session: Session) {
             style: Toast.Style.Success,
             title:
               result.kind === "busy"
-                ? t("一覧を取得中です")
-                : t("一覧の取得を一時停止しています"),
-            message: t("再読み込みで取得を続けられます"),
+                ? "Directory refresh is in progress"
+                : "Directory refresh is paused",
+            message: "Reload to continue fetching",
           });
         }
       } catch (error) {
         setWait({ status: "failed" });
         await showToast({
           style: Toast.Style.Failure,
-          title: t("{0}の一覧を更新できませんでした", dir.label),
+          title: `Could not refresh ${dir.label}`,
           message: error instanceof Error ? error.message : String(error),
         });
       } finally {

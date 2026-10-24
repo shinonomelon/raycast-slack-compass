@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import type { RequestPolicy } from "./request-policy.ts";
 import type { RequestMetrics } from "./request-metrics.ts";
 import { setApiContext } from "./request-context.ts";
-import { t } from "../shared/i18n.ts";
+
 // Slack公式Web APIへの通信。認証情報はヘッダーだけに載せ、応答や通信例外に含まれる秘密を表示しない。
 export type ApiMethod =
   | "auth.test"
@@ -22,10 +22,8 @@ export type ApiSource =
   | "directory"
   | "search"
   | "triage"
-  | "reply-priority"
   | "membership"
   | "thread-context"
-  | "reply-check"
   | "post"
   | "auth"
   | "unknown";
@@ -107,7 +105,7 @@ export function createSlackApi(
     ) {
       throw new SlackApiError(
         "configuration",
-        t("Slack Access TokenにUser OAuth Token（xoxp-）を設定してください"),
+        "Set a User OAuth Token (xoxp-) in Slack Access Token",
       );
     }
     const remaining = (pausedUntil.get(method) ?? 0) - now();
@@ -115,18 +113,18 @@ export function createSlackApi(
       const seconds = Math.ceil(remaining / 1000);
       throw new SlackApiError(
         "rate_limited",
-        t("Slack APIの回数制限です。{0}秒後に再試行してください", seconds),
+        `Slack API rate limit. Retry in ${seconds} seconds`,
         seconds,
         "ratelimited",
       );
     }
     if (options.signal?.aborted)
-      throw new SlackApiError("aborted", t("通信を中断しました"));
+      throw new SlackApiError("aborted", "Request cancelled");
     const waitMs = config.policy
       ? await config.policy.beforeSend(method, options)
       : 0;
     if (options.signal?.aborted)
-      throw new SlackApiError("aborted", t("通信を中断しました"));
+      throw new SlackApiError("aborted", "Request cancelled");
     config.metrics?.record(
       options.source ?? "unknown",
       method,
@@ -145,7 +143,7 @@ export function createSlackApi(
     try {
       if (options.signal?.aborted) abort();
       if (controller.signal.aborted)
-        throw new SlackApiError("aborted", t("通信を中断しました"));
+        throw new SlackApiError("aborted", "Request cancelled");
       const post = POST_METHODS.has(method);
       const url = new URL(`https://slack.com/api/${method}`);
       if (!post)
@@ -166,7 +164,7 @@ export function createSlackApi(
         signal: controller.signal,
       };
       if (options.signal?.aborted || controller.signal.aborted)
-        throw new SlackApiError("aborted", t("通信を中断しました"));
+        throw new SlackApiError("aborted", "Request cancelled");
       sentCallbacks.get(options)?.();
       const responsePromise = fetcher(url, init);
       config.metrics?.record(options.source ?? "unknown", method, "requests");
@@ -183,7 +181,7 @@ export function createSlackApi(
         );
         throw new SlackApiError(
           "rate_limited",
-          t("Slack APIの回数制限です。{0}秒後に再試行してください", seconds),
+          `Slack API rate limit. Retry in ${seconds} seconds`,
           seconds,
           "ratelimited",
         );
@@ -191,7 +189,7 @@ export function createSlackApi(
       if (!response.ok)
         throw new SlackApiError(
           "http",
-          t("Slack APIのHTTPエラー（{0}）", response.status),
+          `Slack API HTTP error (${response.status})`,
         );
       let data: Record<string, unknown>;
       try {
@@ -199,7 +197,7 @@ export function createSlackApi(
       } catch {
         throw new SlackApiError(
           "unreadable",
-          t("Slack APIの応答を読み取れませんでした"),
+          "Could not read the Slack API response",
         );
       }
       if (data.ok === false) {
@@ -214,7 +212,7 @@ export function createSlackApi(
           );
           throw new SlackApiError(
             "rate_limited",
-            t("Slack APIの回数制限です。60秒後に再試行してください"),
+            "Slack API rate limit. Retry in 60 seconds",
             60,
             code,
           );
@@ -222,7 +220,7 @@ export function createSlackApi(
         const needed =
           typeof data.needed === "string" &&
           /^[a-z]+:[a-z_.]+(?:,[a-z]+:[a-z_.]+)*$/.test(data.needed)
-            ? t("（必要な権限: {0}）", data.needed)
+            ? `(required permissions: ${data.needed})`
             : "";
         throw new SlackApiError(
           "api",
@@ -234,19 +232,19 @@ export function createSlackApi(
       if (data.ok !== true)
         throw new SlackApiError(
           "unreadable",
-          t("Slack APIの応答にokがありません"),
+          "The Slack API response has no ok field",
         );
       return data;
     } catch (error) {
       if (timedOut)
         throw new SlackApiError(
           "timeout",
-          t("Slack APIへの通信が{0}秒で時間切れになりました", timeoutMs / 1000),
+          `Slack API request timed out after ${timeoutMs / 1000} seconds`,
         );
       if (options.signal?.aborted)
-        throw new SlackApiError("aborted", t("通信を中断しました"));
+        throw new SlackApiError("aborted", "Request cancelled");
       if (error instanceof SlackApiError) throw error;
-      throw new SlackApiError("network", t("Slack APIとの通信に失敗しました"));
+      throw new SlackApiError("network", "Could not connect to the Slack API");
     } finally {
       clearTimeout(timer);
       options.signal?.removeEventListener("abort", abort);
@@ -273,9 +271,7 @@ export function createSlackApi(
   };
   const api: ApiCall = (method, params = {}, options = {}) => {
     if (options.signal?.aborted)
-      return Promise.reject(
-        new SlackApiError("aborted", t("通信を中断しました")),
-      );
+      return Promise.reject(new SlackApiError("aborted", "Request cancelled"));
     if (
       options.dedupe === false ||
       method === "chat.postMessage" ||
@@ -343,7 +339,7 @@ export function createSlackApi(
         else resolve(data!);
       };
       const abort = () =>
-        finish(new SlackApiError("aborted", t("通信を中断しました")));
+        finish(new SlackApiError("aborted", "Request cancelled"));
       options.signal?.addEventListener("abort", abort, { once: true });
       if (options.signal?.aborted) abort();
       if (options.deadlineAt !== undefined)
@@ -352,8 +348,8 @@ export function createSlackApi(
             const error = new SlackApiError(
               current.started ? "timeout" : "deferred",
               current.started
-                ? t("Slack APIへの通信が時間切れになりました")
-                : t("Slack APIの取得を延期しました"),
+                ? "Slack API request timed out"
+                : "Slack API request is waiting",
               0,
             );
             error.retryAt = now();

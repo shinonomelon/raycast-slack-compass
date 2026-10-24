@@ -2,7 +2,6 @@ import {
   getApiCredentialKey,
   recordRequestCacheHit,
 } from "../../slack/request-context.ts";
-import { t, getLocale } from "../../shared/i18n.ts";
 import { showToast, Toast } from "@raycast/api";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -110,21 +109,17 @@ function notify(stop: Stop, what: string): void {
   const text =
     stop.kind === "failed"
       ? {
-          title: t("{0}を取得できませんでした", what),
+          title: `Could not fetch ${what}`,
           message: stop.message,
         }
       : {
           title:
             stop.pause.cause === "rate_limited"
-              ? t("Slack の回数制限に当たりました")
+              ? "Slack rate limit reached"
               : stop.pause.cause === "deferred"
-                ? t("Slack APIの取得を延期しました")
-                : t("Slack への問い合わせが時間切れでした"),
-          message: t(
-            "{0} まで{1}の取得を止めます（そのあと、Reload Searchで取り直せます）",
-            new Date(stop.pause.until).toLocaleTimeString(getLocale()),
-            what,
-          ),
+                ? "Slack API request is waiting"
+                : "Slack request timed out",
+          message: `Fetching ${what} is paused until ${new Date(stop.pause.until).toLocaleTimeString("en-US")}. Use Reload Search afterwards`,
         };
   try {
     void showToast({ style: Toast.Style.Failure, ...text }).catch(
@@ -251,7 +246,7 @@ export function useTriage(params: {
       if (result.kind === "ok") {
         setHits(result.value.hits);
         setCappedBefore(result.value.cappedBefore);
-      } else notify(result, t("自分宛て"));
+      } else notify(result, "Mentions & DMs");
     });
     return () => {
       alive = false;
@@ -272,7 +267,7 @@ export function useTriage(params: {
       if (!alive) return;
       // 取れなかった会話の古い値は、このまま持つ（既読位置は進むだけで、古い値は未読と見誤る側にしか外れない）
       setLastReads((current) => new Map([...current, ...round.lastReads]));
-      if (round.stop) notify(round.stop, t("既読位置"));
+      if (round.stop) notify(round.stop, "Read Position");
       // ⌘R のあと、最初に終わった取り直しで、出した行の記録を空にし直す
       if (resetPending.current) {
         resetPending.current = false;
@@ -293,7 +288,7 @@ export function useTriage(params: {
     void track(fetchers.fetchFavorites(ids, force)).then((result) => {
       if (!alive) return;
       if (result.kind === "ok") setChunks(result.value);
-      else notify(result, t("お気に入りの未読"));
+      else notify(result, "Unread Favorites");
     });
     return () => {
       alive = false;
@@ -330,7 +325,7 @@ export function useTriage(params: {
         if (!alive) return;
         // 途中まで確かめた分も、保存してあるものを読み直して反映する
         setChecks(store.loadUnknownChecks());
-        if (result.kind !== "ok") notify(result, t("お気に入りの未読"));
+        if (result.kind !== "ok") notify(result, "Unread Favorites");
       },
     );
     return () => {

@@ -1,5 +1,4 @@
 import { useThreadContext } from "../hub/use-thread-context.ts";
-import { t, getLocale } from "../../shared/i18n.ts";
 import {
   Action,
   ActionPanel,
@@ -37,33 +36,30 @@ export function ConversationMessages({
   const common = (
     <>
       <Action
-        title={t("Refresh")}
+        title="Refresh"
         icon={Icon.ArrowClockwise}
         onAction={search.revalidate}
       />
       <Action
-        title={t("Open Extension Preferences")}
+        title="Open Extension Preferences"
         icon={Icon.Gear}
         onAction={openExtensionPreferences}
       />
     </>
   );
   const status = !context.session.canFetch
-    ? t("認証を確認し、Hubを開き直してください")
+    ? "Check authentication and reopen Slack Compass"
     : search.status?.query === expression && search.status.kind === "failed"
       ? search.status.message
       : search.status?.query === expression && search.status.kind === "paused"
-        ? t(
-            "検索を一時停止しています（{0}まで）",
-            new Date(search.status.pause.until).toLocaleTimeString(getLocale()),
-          )
+        ? `Search paused until ${new Date(search.status.pause.until).toLocaleTimeString("en-US")}`
         : search.isLoading
-          ? t("検索中")
-          : t("このチャンネルに一致するメッセージがありません");
+          ? "Searching"
+          : "No matching messages in this channel";
   return (
     <List
-      navigationTitle={t("#{0} 内を検索", channel.name)}
-      searchBarPlaceholder={t("このチャンネル内のメッセージを検索")}
+      navigationTitle={`Search in #${channel.name}`}
+      searchBarPlaceholder="Search messages in this channel"
       searchText={text}
       onSearchTextChange={setText}
       filtering={false}
@@ -73,24 +69,24 @@ export function ConversationMessages({
     >
       <List.EmptyView
         title={status}
-        description={t("検索先: #{0}", channel.name)}
+        description={`Searching: #${channel.name}`}
         actions={
           <ActionPanel>
             <Action
-              title={t("Refresh")}
+              title="Refresh"
               icon={Icon.ArrowClockwise}
               onAction={search.revalidate}
             />
             {detail ? (
               <Action
-                title={t("Hide Details")}
+                title="Hide Details"
                 icon={Icon.Sidebar}
                 shortcut={DETAILS_SHORTCUT}
                 onAction={() => setDetail(false)}
               />
             ) : null}
             <Action
-              title={t("Open Extension Preferences")}
+              title="Open Extension Preferences"
               icon={Icon.Gear}
               onAction={openExtensionPreferences}
             />

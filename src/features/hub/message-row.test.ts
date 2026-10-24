@@ -3,7 +3,6 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
-import * as i18n from "../../shared/i18n.ts";
 import * as compose from "../compose/compose.ts";
 import * as hits from "../../slack/hits.ts";
 import * as mrkdwn from "../../slack/mrkdwn.ts";
@@ -33,7 +32,6 @@ function render(opened: boolean, withContext: boolean) {
   const deps: Record<string, unknown> = {
     "@raycast/api": api,
     "react/jsx-runtime": { jsx, jsxs: jsx, Fragment: "fragment" },
-    "../../shared/i18n.ts": i18n,
     "../compose/compose-form.tsx": { ComposeForm: "compose" },
     "../compose/compose.ts": compose,
     "../../slack/hits.ts": hits,
@@ -129,7 +127,7 @@ test("追加取得があっても先頭はSlack移動、2番目は⌘Returnの�
     assert.equal(ui.actions[0].type, "open");
     assert.equal(
       ui.actions[1].props.title,
-      i18n.t(opened ? "Hide Details" : "Show Details"),
+      opened ? "Hide Details" : "Show Details",
     );
     assert.deepEqual(ui.actions[1].props.shortcut, shortcuts.DETAILS_SHORTCUT);
     (ui.actions[1].props.onAction as () => void)();
@@ -143,18 +141,18 @@ test("追加取得・詳細更新は専用操作へ進み、返信は取得し�
   const ui = render(true, true);
   (
     ui.actions.find(
-      (action) => action.props.title === i18n.t("過去の投稿をさらに取得"),
+      (action) => action.props.title === "Load More Earlier Messages",
     )!.props.onAction as () => void
   )();
   (
-    ui.actions.find((action) => action.props.title === i18n.t("詳細を更新"))!
-      .props.onAction as () => void
+    ui.actions.find((action) => action.props.title === "Refresh Details")!.props
+      .onAction as () => void
   )();
   assert.equal(ui.marks.more, 1);
   assert.equal(ui.marks.refresh, 1);
   assert.equal(ui.marks.opened, 0);
   const reply = ui.actions.find(
-    (action) => action.props.title === i18n.t("Reply in Thread"),
+    (action) => action.props.title === "Reply in Thread",
   )!;
   const form = reply.props.target as Node;
   assert.equal((form.props.reply as { threadTs: string }).threadTs, "1.000000");

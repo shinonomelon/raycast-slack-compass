@@ -108,7 +108,7 @@ test("会話の表示名：チャンネルは #名前、DM は相手の名前（
   );
   assert.equal(
     names.conversationLabel(hit({ channelId: "GMGONE", channelKind: "mpim" })),
-    "グループDM",
+    "Group DM",
   );
 });
 
@@ -121,7 +121,7 @@ test("投稿者の表示名：人の名前、無ければ bot の username、そ
     "old-bot",
   );
   assert.equal(names.sender(hit({ username: "release-bot" })), "release-bot");
-  assert.equal(names.sender(hit()), "不明");
+  assert.equal(names.sender(hit()), "Unknown");
 });
 
 test("ユーザー ID からハンドルを引く。分からなければ undefined", () => {

@@ -1,9 +1,4 @@
 import { getPreferenceValues } from "@raycast/api";
-import { setLanguage } from "./i18n.ts";
-
-export function configureLanguage() {
-  return setLanguage(getPreferenceValues<{ language?: unknown }>().language);
-}
 // 型はビルドで生成するraycast-env.d.tsに依存させない。
 export type Settings = {
   accessToken: string;
@@ -30,10 +25,4 @@ export function readSettings(): Settings {
       values.backgroundRefreshFrequency,
     ),
   };
-}
-
-// AIのキーはSlack認証の設定から分け、任意機能を使う画面でだけ読む。
-export function readReplyAISettings(): { typesafeApiKey: string } {
-  const values = getPreferenceValues<{ typesafeApiKey?: unknown }>();
-  return { typesafeApiKey: text(values.typesafeApiKey).trim() };
 }

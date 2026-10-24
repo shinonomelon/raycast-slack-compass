@@ -30,8 +30,8 @@ test("APIの参加者IDを未知とボットを含めて保持し、通常の人
     rows.map((row) => row.actionable),
     [true, false, false],
   );
-  assert.equal(rows[1].subtitle, "ボット");
-  assert.equal(rows[2].subtitle, "状態未確認");
+  assert.equal(rows[1].subtitle, "Bot");
+  assert.equal(rows[2].subtitle, "Status Unknown");
   assert.equal(allMatches(rows, "U3")[0].id, "U3");
 });
 test("101人以上でも全体を表示し、末尾の人を別名とファジー検索で探せる", () => {
@@ -56,7 +56,7 @@ test("前回結果、失敗、429を0件成功の表示と混同しない", () =
       error: "制限",
       retryAfter: 30,
     }),
-    /30秒/,
+    /Retry in 30 seconds/,
   );
   assert.match(
     membershipStatus({
@@ -65,10 +65,10 @@ test("前回結果、失敗、429を0件成功の表示と混同しない", () =
       previous: true,
       fetchedAt: 1,
     }),
-    /前回取得.*更新中.*取得/,
+    /Previous results.*Refreshing.*Fetched at/,
   );
   assert.match(
     membershipStatus({ status: "empty", data: [], fetchedAt: 1 }),
-    /0件.*取得/,
+    /0 results.*Fetched at/,
   );
 });

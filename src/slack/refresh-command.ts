@@ -12,17 +12,12 @@ import { fetchIdentity, readIdentity } from "./identity.ts";
 import { refreshAll } from "./refresh-all.ts";
 import { apiForToken } from "./slack-api-runner.ts";
 import { apiWithSource, getApiCredentialKey } from "./request-context.ts";
-import {
-  configureLanguage,
-  readSettings,
-  refreshIntervalMs,
-} from "../shared/settings.ts";
+import { readSettings, refreshIntervalMs } from "../shared/settings.ts";
 import { backgroundPreflight } from "./directory-schedule.ts";
 import { acquireFileLease } from "./file-lease.ts";
 import type { RefreshSchedule } from "./directory-refresh-store.ts";
 
 export default async function Command() {
-  configureLanguage();
   const settings = readSettings();
   const background = environment.launchType === "background";
   if (background && settings.backgroundRefreshFrequency === "off") return;

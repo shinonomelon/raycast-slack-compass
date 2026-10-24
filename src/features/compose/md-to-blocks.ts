@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 // Markdown を Slack の blocks と通知用 text に変換する。
 // slack-messaging スキルの送信スクリプト md-to-blocks.pyの移植。
 // 構成は元と同じ（見出し・段落は section の mrkdwn、箇条書きは rich_text_list、ネストは indent）。
@@ -238,9 +237,7 @@ function toSections(text: string, heading = false): Block[] {
   };
   const tooLong = () => {
     throw new MessageLimitError(
-      t(
-        "リンク・メンション・文字がSlackのsectionの3000文字上限に収まりません。短くして投稿してください。投稿は送信していません",
-      ),
+      "Links, mentions, or text exceed Slack's 3,000-character section limit. Shorten the message. Nothing was sent",
     );
   };
   const appendAtomic = (value: string) => {

@@ -1,7 +1,6 @@
 import { emptyDirectoryWait } from "../../slack/directory-state.ts";
 import { useThreadContext } from "./use-thread-context.ts";
 import { conversationGroups } from "./conversation-groups.ts";
-import { t, getLocale } from "../../shared/i18n.ts";
 import {
   Action,
   ActionPanel,
@@ -25,7 +24,6 @@ import {
   type ReactNode,
 } from "react";
 import { ComposeForm } from "../compose/compose-form.tsx";
-import { ReplyPriorityScreen } from "../reply-priority/reply-priority-screen.tsx";
 import { useChannelLibrary } from "../channel-library/use-channel-library.ts";
 import {
   SectionScreen,
@@ -136,15 +134,9 @@ const CANDIDATE_ICONS: Record<Candidate["kind"], Icon> = {
   self: Icon.PersonCircle,
 };
 const MEMBERSHIP_TITLES: Record<Membership, string> = {
-  get all() {
-    return t("すべて");
-  },
-  get joined() {
-    return t("参加中");
-  },
-  get notJoined() {
-    return t("未参加");
-  },
+  all: "All",
+  joined: "Joined",
+  notJoined: "Not Joined",
 };
 // 自分用の設定を state とファイルの両方に反映する。
 // 押し出した画面からも呼ばれるので、最新の値は ref から読む
@@ -176,13 +168,10 @@ function searchStatusRow(
         icon={{ source: Icon.Clock, tintColor: Color.Orange }}
         title={
           status.pause.cause === "timeout"
-            ? t("検索が時間切れでした")
-            : t("Slack の回数制限に当たりました")
+            ? "Search timed out"
+            : "Slack rate limit reached"
         }
-        subtitle={t(
-          "{0} まで検索を止めます（そのあと、Reload Searchか入力で検索します）",
-          new Date(status.pause.until).toLocaleTimeString(getLocale()),
-        )}
+        subtitle={`Search paused until ${new Date(status.pause.until).toLocaleTimeString("en-US")}. Then reload search or type to search again`}
         actions={<ActionPanel>{common}</ActionPanel>}
       />
     );
@@ -192,7 +181,7 @@ function searchStatusRow(
       <List.Item
         id={STATUS_ROW_ID}
         icon={{ source: Icon.ExclamationMark, tintColor: Color.Red }}
-        title={t("検索に失敗しました")}
+        title="Search failed"
         subtitle={status.message}
         actions={<ActionPanel>{common}</ActionPanel>}
       />
@@ -206,7 +195,7 @@ const IDENTITY_ROW_ID = "identity:failure";
 const openPreferencesAction = () => (
   <Action
     key="open-preferences"
-    title={t("Open Extension Preferences")}
+    title="Open Extension Preferences"
     icon={Icon.Gear}
     onAction={openExtensionPreferences}
   />
@@ -231,7 +220,7 @@ function NoIdentity({
           actions={<ActionPanel>{openPreferencesAction()}</ActionPanel>}
         />
       ) : (
-        <List.EmptyView title={t("Slack に自分の情報を問い合わせています")} />
+        <List.EmptyView title="Retrieving your Slack account information" />
       )}
     </List>
   );
@@ -251,7 +240,6 @@ export default function Command() {
     <Hub
       key={scopeKey(session.display)}
       session={session}
-      initialToken={settings.accessToken}
       previousHandles={settings.previousHandles}
       failure={failure}
       checking={checking}
@@ -260,13 +248,11 @@ export default function Command() {
 }
 function Hub({
   session,
-  initialToken,
   previousHandles,
   failure,
   checking,
 }: {
   session: Session;
-  initialToken: string;
   // 設定の Previous Handles（カンマ区切り）
   previousHandles: string;
   // 今回の auth.test が取れなかった理由。あれば、一覧の先頭に理由の行を出す（前回の結果の人の一覧は、そのまま出す）
@@ -340,12 +326,9 @@ function Hub({
     people.data ?? [],
   );
   const scopeWarning = scopeResolution.missingSection
-    ? t("選択したセクションは削除されています。検索条件を選び直してください")
+    ? "The selected section was deleted. Choose search filters again"
     : scopeResolution.unresolvedChannelIds.length
-      ? t(
-          "参照できないチャンネル{0}件を除外しています。ディレクトリを更新してください",
-          scopeResolution.unresolvedChannelIds.length,
-        )
+      ? `Excluded ${scopeResolution.unresolvedChannelIds.length} unavailable channels. Refresh the directory`
       : undefined;
   const favoriteValues = useMemo(
     () =>
@@ -391,7 +374,7 @@ function Hub({
     resetRanking,
   } = useFrecencySorting(items, {
     key: (item) => item.id,
-    namespace: "slack-hub",
+    namespace: "slack-compass",
   });
   // 一致の強さが同じなら、お気に入り → 最近開いた順 → 名前の短い順。
   // 参加中の一覧がまだ無い間は、未参加に全件が出るのを避けるため絞り込み結果を出さない。
@@ -579,7 +562,7 @@ function Hub({
     swap: (
       <Action
         key="swap"
-        title={t("Swap Conversations and Messages")}
+        title="Swap Conversations and Messages"
         icon={Icon.Switch}
         shortcut={SWAP_SHORTCUT}
         onAction={swapOrder}
@@ -588,7 +571,7 @@ function Hub({
     "reload-search": (
       <Action
         key="reload-search"
-        title={t("Reload Search")}
+        title="Reload Search"
         icon={Icon.ArrowClockwise}
         shortcut={Keyboard.Shortcut.Common.Refresh}
         onAction={reloadSearch}
@@ -597,7 +580,7 @@ function Hub({
     "reload-all": (
       <Action
         key="reload-all"
-        title={t("Reload Conversations and People")}
+        title="Reload Conversations and People"
         icon={Icon.ArrowClockwise}
         shortcut={RELOAD_ALL_SHORTCUT}
         onAction={reload}
@@ -611,10 +594,10 @@ function Hub({
     if (!session.canFetch || !library.ready) {
       void showToast({
         style: Toast.Style.Failure,
-        title: t("検索条件をまだ開けません"),
+        title: "Search filters are not ready",
         message:
           library.error ||
-          t("チャンネル一覧の取得完了を待つか、一覧を更新してください"),
+          "Wait for the channel directory to load or refresh it",
       });
       return;
     }
@@ -657,7 +640,7 @@ function Hub({
   const scopeAction = (
     <Action
       key="search-scope"
-      title={t("検索条件を選ぶ")}
+      title="Choose Search Filters"
       icon={Icon.Filter}
       onAction={openScope}
     />
@@ -665,7 +648,7 @@ function Hub({
   const continueAction = search.progress?.pendingCount ? (
     <Action
       key="continue-search"
-      title={t("続きを取得")}
+      title="Continue Search"
       icon={Icon.ArrowDown}
       onAction={() => {
         if (!search.isLoading) search.continueSearch();
@@ -681,7 +664,7 @@ function Hub({
   const hideDetails = showDetail ? (
     <Action
       key="hide-details"
-      title={t("Hide Details")}
+      title="Hide Details"
       icon={Icon.Sidebar}
       shortcut={DETAILS_SHORTCUT}
       onAction={() => setShowDetail(false)}
@@ -770,39 +753,19 @@ function Hub({
         triage.isLoading ||
         checking
       }
-      navigationTitle={`Slack Hub · ${scopeTitle}`}
+      navigationTitle={`Slack Compass · ${scopeTitle}`}
       filtering={false}
       searchText={searchText}
       onSearchTextChange={changeSearchText}
       selectedItemId={selection.selectedId}
       onSelectionChange={setActiveRowId}
       isShowingDetail={showDetail}
-      searchBarPlaceholder={t("チャンネル・人・メッセージを検索")}
+      searchBarPlaceholder="Search Slack"
       searchBarAccessory={
         <List.Dropdown
-          tooltip={t("参加しているかで絞る")}
+          tooltip="Filter by membership"
           value={membership}
-          onChange={(value) => {
-            if (value === "reply-priority") {
-              push(
-                <ReplyPriorityScreen
-                  context={membershipContext}
-                  initialToken={initialToken}
-                  scopeControls={{
-                    scope: searchScope,
-                    resolved: scopeResolution.resolved,
-                    title: scopeTitle,
-                    library: library.library,
-                    conversations: conversations.data ?? [],
-                    people: people.data ?? [],
-                    onScopeChange: setSearchScope,
-                    onMutate: library.mutate,
-                    scopeWarning,
-                  }}
-                />,
-              );
-            } else setMembership(value as Membership);
-          }}
+          onChange={(value) => setMembership(value as Membership)}
         >
           {MEMBERSHIPS.map((m) => (
             <List.Dropdown.Item
@@ -811,7 +774,6 @@ function Hub({
               value={m}
             />
           ))}
-          <List.Dropdown.Item value="reply-priority" title={t("返信待ち")} />
         </List.Dropdown>
       }
     >
@@ -819,18 +781,16 @@ function Hub({
         title={
           directoryWait
             ? directoryWait.status === "pending"
-              ? t("一覧の取得を一時停止しています")
-              : t("一覧を取得中です")
+              ? "Directory refresh is paused"
+              : "Directory refresh is in progress"
             : membership === "all"
-              ? t("見つかりません")
-              : t("{0}では見つかりません", MEMBERSHIP_TITLES[membership])
+              ? "No results"
+              : `No results in ${MEMBERSHIP_TITLES[membership]}`
         }
         description={
           directoryWait
-            ? t("再読み込みで取得を続けられます")
-            : t(
-                "検索欄の右のドロップダウンで、参加中・未参加の絞り込みを切り替えられます",
-              )
+            ? "Reload to continue fetching"
+            : "Use the dropdown next to the search field to change the joined-channel filter"
         }
         actions={<ActionPanel>{standaloneWithDetails("empty")}</ActionPanel>}
       />
@@ -866,7 +826,7 @@ function Hub({
               <ActionPanel>
                 {scopeAction}
                 <Action
-                  title={t("チャンネル一覧と整理データを更新")}
+                  title="Refresh Channels and Library"
                   onAction={async () => {
                     await conversations.reload();
                     await library.reload();
@@ -881,7 +841,7 @@ function Hub({
         if (section === "candidates") {
           if (!hasTopSection) return null;
           return (
-            <List.Section key="candidates" title={t("候補")}>
+            <List.Section key="candidates" title="Suggestions">
               {candidates.map((c) => (
                 <List.Item
                   key={candidateRowId(c)}
@@ -892,7 +852,7 @@ function Hub({
                   actions={
                     <ActionPanel>
                       <Action
-                        title={t("Use This Candidate")}
+                        title="Use This Candidate"
                         icon={Icon.ArrowRight}
                         onAction={() => confirmCandidate(c)}
                       />
@@ -907,10 +867,8 @@ function Hub({
                   key={warningRowId(u.start)}
                   id={warningRowId(u.start)}
                   icon={{ source: Icon.Warning, tintColor: Color.Orange }}
-                  title={t("「{0}」の相手が決まりません", u.raw)}
-                  subtitle={t(
-                    "候補から選ぶか、正式名で打ってください（この絞り込みは送りません）",
-                  )}
+                  title={`Could not resolve "${u.raw}"`}
+                  subtitle="Choose a suggestion or enter the exact name (this filter will not be sent)"
                   actions={
                     <ActionPanel>
                       {standaloneWithDetails("unresolved-filter")}
@@ -935,8 +893,8 @@ function Hub({
                 const filter = filterForRow(item, tokenOf);
                 const filterTitle =
                   item.kind === "person"
-                    ? t("Filter by This Person")
-                    : t("Filter by This Conversation");
+                    ? "Filter by This Person"
+                    : "Filter by This Conversation";
                 return (
                   <List.Item
                     key={conversationRowId(item)}
@@ -961,8 +919,8 @@ function Hub({
                                 color: Color.Red,
                               },
                               tooltip: unread.atLeast
-                                ? t("未読（件数は下限）")
-                                : t("未読"),
+                                ? "Unread (count is a lower bound)"
+                                : "Unread",
                             },
                           ]
                         : []),
@@ -971,7 +929,7 @@ function Hub({
                         ? [
                             {
                               icon: Icon.Star,
-                              tooltip: t("お気に入り"),
+                              tooltip: "Favorites",
                             },
                           ]
                         : []),
@@ -979,7 +937,7 @@ function Hub({
                     actions={
                       <ActionPanel>
                         <Action.Open
-                          title={t("Open in Slack")}
+                          title="Open in Slack"
                           icon={Icon.ArrowRight}
                           target={targetLink(identity.teamId, target)}
                           application="Slack"
@@ -993,15 +951,13 @@ function Hub({
                           }}
                         />
                         <Action
-                          title={
-                            showDetail ? t("Hide Details") : t("Show Details")
-                          }
+                          title={showDetail ? "Hide Details" : "Show Details"}
                           icon={Icon.Sidebar}
                           shortcut={DETAILS_SHORTCUT}
                           onAction={() => setShowDetail((value) => !value)}
                         />
                         <Action.Push
-                          title={t("Write")}
+                          title="Write"
                           icon={Icon.Message}
                           shortcut={WRITE_SHORTCUT}
                           target={
@@ -1014,7 +970,7 @@ function Hub({
                         />
                         {session.canFetch && item.kind === "person" ? (
                           <Action.Push
-                            title={t("View Channels with This Person")}
+                            title="View Channels with This Person"
                             icon={Icon.Hashtag}
                             target={
                               <PersonChannels
@@ -1027,7 +983,7 @@ function Hub({
                         {session.canFetch &&
                         (item.kind === "channel" || item.kind === "private") ? (
                           <Action.Push
-                            title={t("View Members")}
+                            title="View Members"
                             icon={Icon.TwoPeople}
                             target={
                               <ChannelMembers
@@ -1060,8 +1016,8 @@ function Hub({
                         <Action
                           title={
                             isFavorite
-                              ? t("Remove from Favorites")
-                              : t("Add to Favorites")
+                              ? "Remove from Favorites"
+                              : "Add to Favorites"
                           }
                           icon={isFavorite ? Icon.StarDisabled : Icon.Star}
                           shortcut={Keyboard.Shortcut.Common.Pin}
@@ -1072,7 +1028,7 @@ function Hub({
                         (item.kind === "channel" || item.kind === "private") ? (
                           <>
                             <Action
-                              title={t("このチャンネルでメッセージを検索")}
+                              title="Search Messages in This Channel"
                               icon={Icon.MagnifyingGlass}
                               onAction={() => {
                                 setSearchScope({
@@ -1091,7 +1047,7 @@ function Hub({
                               }}
                             />
                             <Action.Push
-                              title={t("セクションへの所属")}
+                              title="Section Membership"
                               icon={Icon.Folder}
                               target={
                                 <SectionMembershipForm
@@ -1105,7 +1061,7 @@ function Hub({
                           </>
                         ) : null}
                         <Action.Push
-                          title={t("Edit Aliases")}
+                          title="Edit Aliases"
                           icon={Icon.Pencil}
                           shortcut={Keyboard.Shortcut.Common.Edit}
                           target={
@@ -1119,7 +1075,7 @@ function Hub({
                           }
                         />
                         <Action.Push
-                          title={t("Edit Dictionary")}
+                          title="Edit Dictionary"
                           icon={Icon.Book}
                           shortcut={{ modifiers: ["cmd"], key: "d" }}
                           target={
@@ -1133,13 +1089,13 @@ function Hub({
                           }
                         />
                         <Action.CopyToClipboard
-                          title={t("Copy ID")}
+                          title="Copy ID"
                           content={item.id}
                           shortcut={Keyboard.Shortcut.Common.Copy}
                         />
                         {commonActions}
                         <Action
-                          title={t("Reset Ranking")}
+                          title="Reset Ranking"
                           icon={Icon.ArrowCounterClockwise}
                           onAction={() => resetRanking(item)}
                         />
@@ -1162,8 +1118,8 @@ function Hub({
           return (
             <List.Section
               key="triage"
-              title={t("自分宛て（過去7日）")}
-              subtitle={t("{0} 件", triage.rows.length)}
+              title="Mentions & DMs (Past 7 Days)"
+              subtitle={`${triage.rows.length} results`}
             >
               {triage.rows.map(({ hit, state }) =>
                 messageRow(hit, triageRowId(hit), state),
@@ -1177,16 +1133,12 @@ function Hub({
         return (
           <List.Section
             key="messages"
-            title={t("メッセージ")}
+            title="Messages"
             subtitle={
               messageHits.length > 0
                 ? [
                     filterLabels,
-                    t(
-                      "{0}{1} 件",
-                      search.progress?.partial ? t("取得済み") : "",
-                      messageHits.length,
-                    ),
+                    `${search.progress?.partial ? "Fetched: " : ""}${messageHits.length} results`,
                   ]
                     .filter(Boolean)
                     .join(" · ")
@@ -1199,43 +1151,35 @@ function Hub({
                 id="scope-search-progress"
                 title={
                   search.progress.capped
-                    ? t("検索上限に達しました。範囲を狭めてください")
+                    ? "Search limit reached. Narrow the scope"
                     : search.progress.failedQueries.length
-                      ? t("一部の検索に失敗しました")
-                      : t("取得途中")
+                      ? "Some searches failed"
+                      : "Partially Fetched"
                 }
-                subtitle={t(
-                  "{0}/{1} 検索対象{2}",
-                  search.progress.completedSearches,
-                  search.progress.totalSearches,
+                subtitle={`${search.progress.completedSearches}/${search.progress.totalSearches} searches${
                   search.progress.omittedCount
-                    ? t(" \u00B7 {0} 件省略", search.progress.omittedCount)
-                    : "",
-                )}
+                    ? ` · ${search.progress.omittedCount} omitted`
+                    : ""
+                }`}
                 icon={Icon.Info}
                 actions={
                   <ActionPanel>
                     <Action.Push
-                      title={t("取得状況")}
+                      title="Fetch Status"
                       target={
                         <Detail
-                          markdown={t(
-                            "取得済み {0} 件。{1}\n\n各検索は最大2ページ、全体で最大400件を保存します。取得済みの結果を新しい順に並べています。全範囲の最新400件を保証するものではありません。\n\n取得中の新着・編集・検索インデックスの変更でページ境界が動くため、重複を除いても一部の投稿を取得できない場合があります。必要なら範囲を狭めて先頭から更新してください。",
-                            messageHits.length,
+                          markdown={`Fetched ${messageHits.length} results. ${
                             search.progress.omittedCount
-                              ? t(
-                                  "保存上限で {0} 件を省略しました。",
-                                  search.progress.omittedCount,
-                                )
-                              : "",
-                          )}
+                              ? `Omitted ${search.progress.omittedCount} results due to the storage limit.`
+                              : ""
+                          }\n\nEach search fetches up to 2 pages, with 400 results stored in total. Fetched results are sorted newest first; they may not be the newest 400 across the entire scope.\n\nNew messages, edits, and search indexing can shift page boundaries while fetching. Some messages may be missed even after deduplication. Narrow the scope and reload from the beginning if needed.`}
                         />
                       }
                     />
                     {continueAction}
                     {scopeAction}
                     <Action
-                      title={t("先頭から更新")}
+                      title="Reload from Beginning"
                       onAction={search.revalidate}
                     />
                   </ActionPanel>

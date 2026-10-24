@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 // 投稿まわりの純粋な部品（本文の前置き・slack:// のリンク・送信の引数・送信結果の分類）。
 // @raycast/api を読み込まないので、node のテストから動かせる
 import { isThreadReply, messageLink, type Hit } from "../../slack/hits.ts";
@@ -64,7 +63,7 @@ export function destinationLabel(item: Pick<Item, "kind" | "title">): string {
     case "person":
       return `@${item.title}`;
     case "group":
-      return t("{0}（グループDM）", item.title);
+      return `${item.title} (group DM)`;
     case "channel":
     case "private":
       return `#${item.title}`;
@@ -90,7 +89,7 @@ export function replyTargetOf(
 // 欄に出るのは選んだ返信そのもの。「返信先」だと親の本文と読み違えるので、「スレッド内の返信」にする。
 // 親の行（threadTs が無い、または ts と同じ）は、欄に出るのが親そのものなので「返信先」
 export function replyParentTitle(hit: Pick<Hit, "ts" | "threadTs">): string {
-  return isThreadReply(hit) ? t("スレッド内の返信") : t("返信先");
+  return isThreadReply(hit) ? "Thread replies" : "Replying to";
 }
 // 返信のフォームに出す、親メッセージの説明（送信者・時刻・本文の先頭）。
 // body は、呼び出し側で Slack の書式を読める形にして、短くしたもの
@@ -99,7 +98,7 @@ export function replyParentText(parent: {
   time: string;
   body: string;
 }): string {
-  return `${parent.sender} · ${parent.time}\n${parent.body || t("（本文なし）")}`;
+  return `${parent.sender} · ${parent.time}\n${parent.body || "(No message body)"}`;
 }
 // 送れたか未確認のときに、届いたかを確かめるために開く先と、その操作の名前・送り直しの確認文。
 // - 返信：スレッドの親の位置を開く。threadTsはAPIへ渡した親の値（返信の行ならその親、最上位の投稿ならその投稿自身）。
@@ -126,17 +125,15 @@ export function confirmationOf(
     return {
       link: slackAppMessageLink(teamId, target.id, threadTs),
       openTitle: "Open Parent Message",
-      resendMessage: t(
-        "前回は、届いたかどうかが分かっていません。届いていた場合は、同じ返信が二重になります。先にスレッドの親を開いて、返信が付いたか確かめてください。",
-      ),
+      resendMessage:
+        "Delivery of the previous reply is unknown. Sending again may create a duplicate. Open the parent message first to check whether your reply arrived.",
     };
   }
   return {
     link: targetLink(teamId, target),
     openTitle: "Open Conversation",
-    resendMessage: t(
-      "前回は、届いたかどうかが分かっていません。届いていた場合は、同じ投稿が二重になります。先に宛先の会話を開いて、確かめてください。",
-    ),
+    resendMessage:
+      "Delivery of the previous message is unknown. Sending again may create a duplicate. Open the destination conversation first to check whether it arrived.",
   };
 }
 export type UnconfirmedReason =
@@ -178,9 +175,8 @@ export function classifySendResponse(
     return {
       kind: "unconfirmed",
       reason: "unreadable",
-      message: t(
-        "投稿の応答を読み取れませんでした。Slackには届いている可能性があります",
-      ),
+      message:
+        "Could not read the posting response. Your message may have reached Slack",
     };
   }
   return {
@@ -220,14 +216,11 @@ export function classifySendError(error: unknown): SendOutcome {
   const message =
     error instanceof SlackApiError
       ? error.message
-      : t("Slack APIとの通信に失敗しました");
+      : "Could not connect to the Slack API";
   return {
     kind: "unconfirmed",
     reason,
-    message: t(
-      "{0}。Slackには届いている可能性があります。送信先を確認してください",
-      maskTokens(message),
-    ),
+    message: `${maskTokens(message)}. Your message may have reached Slack. Check the destination`,
   };
 }
 // ---- 送信のあとの印 --------------------------------------------------------------

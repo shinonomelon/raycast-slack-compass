@@ -1,4 +1,3 @@
-import { t, getLocale } from "../../shared/i18n.ts";
 import { toItems } from "../../slack/items.ts";
 import { rankItems } from "../search/search.ts";
 import type { Person, Prefs } from "../../shared/types.ts";
@@ -24,10 +23,10 @@ export function memberRows(
       }),
       person,
       subtitle: person?.isBot
-        ? t("ボット")
+        ? "Bot"
         : person
           ? rows.get(id)?.subtitle
-          : t("状態未確認"),
+          : "Status Unknown",
       actionable: person !== undefined && !person.isBot,
     };
   });
@@ -42,22 +41,13 @@ export function membershipStatus(state: MembershipState): string {
   const time =
     state.fetchedAt === undefined
       ? ""
-      : t(
-          "取得 {0}",
-          new Date(state.fetchedAt).toLocaleTimeString(getLocale()),
-        );
-  const previous = state.previous ? t("前回取得 \u00B7 ") : "";
+      : `Fetched at ${new Date(state.fetchedAt).toLocaleTimeString("en-US")}`;
+  const previous = state.previous ? "Previous results · " : "";
   if (state.status === "loading")
-    return t("{0}更新中{1}", previous, time ? ` · ${time}` : "");
+    return `${previous}Refreshing${time ? ` · ${time}` : ""}`;
   if (state.status === "rate-limited" || state.status === "deferred")
-    return t(
-      "{0}{1} \u00B7 {2}秒後に再試行{3}",
-      previous,
-      state.error,
-      state.retryAfter,
-      time ? ` · ${time}` : "",
-    );
+    return `${previous}${state.error} · Retry in ${state.retryAfter} seconds${time ? ` · ${time}` : ""}`;
   if (state.status === "failed" || state.status === "auth-required")
-    return `${previous}${state.error ?? t("認証設定を確認し、Hubを開き直してください")}${time ? ` · ${time}` : ""}`;
-  return t("{0}件{1}", state.data.length, time ? ` · ${time}` : "");
+    return `${previous}${state.error ?? "Check authentication preferences and reopen Slack Compass"}${time ? ` · ${time}` : ""}`;
+  return `${state.data.length} results${time ? ` · ${time}` : ""}`;
 }

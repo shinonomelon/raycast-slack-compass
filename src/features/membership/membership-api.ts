@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import type { Conversation } from "../../shared/types.ts";
 import {
   SlackApiError,
@@ -12,16 +11,13 @@ export type MembershipRequest = {
   now?: () => number;
 };
 const unreadable = () =>
-  new SlackApiError("unreadable", t("参加関係の応答を読み取れませんでした"));
+  new SlackApiError("unreadable", "Could not read the membership response");
 export function checkRequest(request: MembershipRequest): number {
   if (request.signal.aborted)
-    throw new SlackApiError("aborted", t("通信を中断しました"));
+    throw new SlackApiError("aborted", "Request cancelled");
   const remaining = request.deadline - (request.now ?? Date.now)();
   if (remaining <= 0)
-    throw new SlackApiError(
-      "timeout",
-      t("参加関係の取得が時間切れになりました"),
-    );
+    throw new SlackApiError("timeout", "Membership request timed out");
   return remaining;
 }
 async function pages(

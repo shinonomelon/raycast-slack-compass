@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import {
   existsSync,
   mkdirSync,
@@ -47,9 +46,7 @@ export function createChannelLibraryStore(
     try {
       if (statSync(path).size > limit)
         throw new Error(
-          t(
-            "整理ファイルがサイズ上限を超えています。復旧してから再読み込みしてください",
-          ),
+          "The channel library file exceeds the size limit. Restore it before reloading",
         );
       return parseLibraryDocument(JSON.parse(readFileSync(path, "utf8")));
     } catch (error) {
@@ -57,7 +54,7 @@ export function createChannelLibraryStore(
         return { version: 1, accounts: {}, legacyClaims: {} };
       throw new LibraryStoreError(
         "corrupt",
-        t("整理ファイルを読めません。正本を復旧してから再読み込みしてください"),
+        "Could not read the channel library file. Restore it before reloading",
       );
     }
   }
@@ -65,14 +62,12 @@ export function createChannelLibraryStore(
   const locked = () =>
     new LibraryStoreError(
       "locked",
-      t("別の画面またはプロセスが保存中です。再試行してください"),
+      "Another view or process is saving. Please try again",
     );
   const unsafe = () =>
     new LibraryStoreError(
       "recovery",
-      t(
-        "保存ロックの所有者を確認できません。整理ファイルを保護したままロックを復旧してください",
-      ),
+      "Could not verify the save lock owner. Recover the lock while protecting the channel library file",
     );
   function owner() {
     try {
@@ -160,7 +155,7 @@ export function createChannelLibraryStore(
       const serialized = JSON.stringify(document, null, 2);
       if (Buffer.byteLength(serialized) > limit)
         throw new Error(
-          t("整理データがサイズ上限を超えています。保存内容を減らしてください"),
+          "The channel library exceeds the size limit. Reduce the saved data",
         );
       temporary = `${path}.${process.pid}.${randomUUID()}.tmp`;
       options.checkpoint?.("before-write");
@@ -227,7 +222,7 @@ export function createChannelLibraryStore(
       const document = await transaction((latest) => {
         if (!Object.hasOwn(latest.accounts, key))
           throw new Error(
-            t("ディレクトリ取得完了後に整理データを初期化してください"),
+            "Wait for the directory to load before initializing the channel library",
           );
         latest.accounts[key] = applyLibraryMutation(
           latest.accounts[key],

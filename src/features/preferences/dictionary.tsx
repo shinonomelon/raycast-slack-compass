@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import {
   Action,
   ActionPanel,
@@ -17,14 +16,14 @@ function AddRule({ onSubmit }: { onSubmit: (rule: DictionaryRule) => void }) {
   const [fromError, setFromError] = useState<string>();
   return (
     <Form
-      navigationTitle={t("置き換えを追加")}
+      navigationTitle="Add Replacement"
       actions={
         <ActionPanel>
           <Action.SubmitForm
-            title={t("Add")}
+            title="Add"
             onSubmit={(values: { from: string; to: string }) => {
               if (!values.from.trim()) {
-                setFromError(t("置き換える語を入れてください"));
+                setFromError("Enter the text to replace");
                 return;
               }
               onSubmit({ from: values.from.trim(), to: values.to.trim() });
@@ -36,17 +35,13 @@ function AddRule({ onSubmit }: { onSubmit: (rule: DictionaryRule) => void }) {
     >
       <Form.TextField
         id="from"
-        title={t("チャンネル名の語")}
-        placeholder={t("ドキュメント")}
+        title="Channel Name Text"
+        placeholder="Documents"
         error={fromError}
         onChange={() => setFromError(undefined)}
       />
-      <Form.TextField id="to" title={t("自分の呼び方")} placeholder="docs" />
-      <Form.Description
-        text={t(
-          "チャンネル名やグループDMの名前に含まれる語を置き換えた名前でも、検索に当たるようになります。例: ドキュメント \u2192 docsで、docsからドキュメントの名前を探せます",
-        )}
-      />
+      <Form.TextField id="to" title="Your Replacement" placeholder="docs" />
+      <Form.Description text="Match channel and group DM names using alternative text. Example: replacing documents → docs lets you find a documents channel by searching for docs" />
     </Form>
   );
 }
@@ -69,19 +64,17 @@ export function Dictionary({
   };
   const addAction = (
     <Action.Push
-      title={t("Add Rule")}
+      title="Add Rule"
       icon={Icon.Plus}
       shortcut={Keyboard.Shortcut.Common.New}
       target={<AddRule onSubmit={(rule) => update([...rules, rule])} />}
     />
   );
   return (
-    <List navigationTitle={t("名前の置き換え辞書")}>
+    <List navigationTitle="Name Replacement Dictionary">
       <List.EmptyView
-        title={t("置き換えはまだありません")}
-        description={t(
-          "ActionsのAdd Ruleで追加します（例: ドキュメント \u2192 docs）",
-        )}
+        title="No replacements yet"
+        description="Use Add Rule in Actions (example: documents → docs)"
         actions={<ActionPanel>{addAction}</ActionPanel>}
       />
       {rules.map((rule, index) => {
@@ -91,24 +84,20 @@ export function Dictionary({
           <List.Item
             key={`${rule.from}-${index}`}
             title={`${rule.from} → ${rule.to}`}
-            accessories={[{ text: t("{0} 件", hits) }]}
+            accessories={[{ text: `${hits} results` }]}
             actions={
               <ActionPanel>
                 {addAction}
                 <Action
-                  title={t("Delete Rule")}
+                  title="Delete Rule"
                   icon={Icon.Trash}
                   style={Action.Style.Destructive}
                   shortcut={{ modifiers: ["ctrl"], key: "x" }}
                   onAction={async () => {
                     const ok = await confirmAlert({
-                      title: t(
-                        "{0} \u2192 {1} を消しますか",
-                        rule.from,
-                        rule.to,
-                      ),
+                      title: `Delete ${rule.from} → ${rule.to}?`,
                       primaryAction: {
-                        title: t("Delete"),
+                        title: "Delete",
                         style: Alert.ActionStyle.Destructive,
                       },
                     });

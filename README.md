@@ -1,17 +1,22 @@
-# Slack Hub
+# Slack Compass
 
-RaycastからSlackのチャンネル・人・グループDMを探し、メッセージの検索・投稿・スレッド返信ができる拡張です。公式Slack Web APIへ直接接続します。slack-cliは不要です。
+Slack Compass finds Slack channels, people, and group DMs from Raycast. It also searches messages, posts messages, and replies in threads. It connects directly to the official Slack Web API and does not need slack-cli.
 
-名前のファジー検索、お気に入り、セクション、投稿者による絞り込み、別名、メンション・DMの整理、人の参加チャンネル・共通チャンネル検索に対応しています。画面は日本語・英語を切り替えられます。Raycast Storeには未公開です。
+Search supports fuzzy name matching, favorites, sections, filtering by sender, aliases, a triage list for mentions and DMs, and lookups of which channels a person has joined or who is in a channel.
 
-## インストールする
+## Requirements
 
-Mac、Raycast、git、Node.js 22.22.2以上が必要です。会話を開くにはSlackのデスクトップアプリを使います。
+- A Slack workspace where you can create or install a Slack app
+- A Slack User OAuth Token (`xoxp-`) with the scopes listed below
+- The Slack desktop app, which Slack Compass uses to open conversations
+- To run from source: macOS, Raycast, git, and Node.js 22.22.2 or later
 
-### 1. Slackのユーザートークンを取得する
+## Setup
 
-1. [Slackのアプリ管理画面](https://api.slack.com/apps)でアプリを作り、使うワークスペースを選びます。
-2. **OAuth & Permissions → User Token Scopes**に、次の8つを追加します。
+### 1. Get a Slack user token
+
+1. Create an app in the [Slack app dashboard](https://api.slack.com/apps) and choose your workspace.
+2. Under **OAuth & Permissions → User Token Scopes**, add these eight scopes:
 
    ```text
    channels:read
@@ -24,11 +29,11 @@ Mac、Raycast、git、Node.js 22.22.2以上が必要です。会話を開くに�
    im:write
    ```
 
-3. **Install to Workspace**でインストールし、**User OAuth Token**（`xoxp-`）をコピーします。承認制のワークスペースでは管理者の承認が必要です。Bot Token（`xoxb-`）は使えません。
+3. Click **Install to Workspace**, then copy the **User OAuth Token** (`xoxp-`). Workspaces that require app approval need an admin to approve the app first. Bot tokens (`xoxb-`) do not work.
 
-トークンは自分としてSlackを読み書きできる鍵です。GitHubやチャットに貼らず、コピー後はクリップボード履歴からも消してください。
+The token lets Slack Compass read and write Slack as you. Do not paste it into GitHub or chat. After you copy it into Raycast, clear it from your clipboard history.
 
-### 2. 拡張をRaycastに取り込む
+### 2. Install the extension in Raycast
 
 ```bash
 git clone https://github.com/shinonomelon/raycast-slack-hub.git ~/raycast-slack-hub
@@ -37,44 +42,70 @@ npm ci
 npm run dev
 ```
 
-`built extension successfully`と出たら取り込みは完了です。Control+Cで止めても拡張は残ります。
+When the terminal prints `built extension successfully`, the extension is imported. You can stop the command with Control+C. The extension stays in Raycast.
 
-### 3. Raycastにトークンを設定する
+### 3. Add the token to Raycast
 
-Raycastの設定 → **Extensions → Slack Hub → Slack Access Token**に入力し、Slack Hubを開き直します。初回は会話・人の一覧を取得するため少し待ちます。
+Open Raycast Settings → **Extensions → Slack Compass → Slack Access Token**, paste the token, and open **Search Slack** again. The first launch takes a moment while it loads conversations and people.
 
-ハンドルを変更したことがある人は、任意設定の`Previous Handles`に以前の名前をカンマ区切りで入れてください。旧版のCLI設定は自動で読みません。
+If you changed your Slack handle in the past, enter your old handles in **Previous Handles**, separated by commas.
 
-表示言語は同じ設定画面の`Language / 言語`で`日本語`または`English`を選び、Slack Hubを開き直します。初期設定は日本語です。Slackの投稿本文や名前は翻訳しません。
+## Common tasks
 
-背景更新は初期設定で30分おきです。`Background refresh frequency / 背景更新の頻度`で30分・1時間・3時間・オフを選べます。オフでも手動更新は使えます。[更新頻度と回数制限](docs/reference.md#背景更新の頻度を選ぶ)を参照してください。
+Return opens the selected item in Slack. ⌘Return shows or hides details. ⌘N opens the post form for a conversation or person. You can also pick any of these from Actions.
 
-## よく使う操作
+| Task                             | What to do                                                                                                                         |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Open a channel or person         | Type a name, select the row, press Return                                                                                          |
+| Read a message                   | Type a search term or `in:#channel-name`, select a result, press ⌘Return                                                           |
+| Post a message or send a DM      | Select a conversation or person, choose Write, write the message, choose Post and Open in Slack                                    |
+| Reply in a thread                | Select a message, choose Reply in Thread, write the reply, choose Post and Open in Slack                                           |
+| Triage messages addressed to you | Clear the search bar, select an item under Mentions & DMs, choose Mark as Handled                                                  |
+| Find channels a person is in     | Select a person, choose View Channels with This Person. Choose Add Person to narrow the list to channels all selected people share |
+| See who is in a channel          | Select a channel, choose View Members                                                                                              |
 
-一覧のReturnはSlackで開く、⌘Returnは詳細を表示・非表示、会話・人の⌘Nは投稿フォームです。Actionsからも選べます。
+[Using Slack Compass](docs/usage.md) lists every action and shortcut. [Choosing a search scope](docs/search-scopes.md) explains how to filter by favorites, sections, channels, and sender.
 
-| やりたいこと             | 操作                                                                          |
-| ------------------------ | ----------------------------------------------------------------------------- |
-| チャンネルや人を開く     | 名前を入力 → 行を選ぶ → Return                                                |
-| メッセージを読む         | 検索語や`in:#チャンネル名`を入力 → 結果を選ぶ → ⌘Return                       |
-| 投稿・DMを送る           | 会話や人を選ぶ → 投稿する → 本文を書く → 投稿してSlackで開く                  |
-| スレッドに返信する       | メッセージを選ぶ → スレッドに返信 → 本文を書く → 投稿してSlackで開く          |
-| 自分宛てを整理する       | 検索欄を空にする → 自分宛ての行を選ぶ → 対応済みにする                        |
-| 人がいるチャンネルを探す | 人を選ぶ → この人がいるチャンネルを表示。人を追加で全員の共通チャンネルに絞る |
-| チャンネルの参加者を見る | チャンネルを選ぶ → 参加者を表示                                               |
+Message details show the thread leading up to the selected message. Reading earlier messages needs optional history scopes. See [Using Slack Compass](docs/usage.md).
 
-[詳しい使い方](docs/usage.md)に全操作・ショートカットをまとめています。[検索範囲の選び方](docs/search-scopes.md)では、お気に入り・セクション・チャンネル・投稿者で絞る手順を説明しています。
+## Settings
 
-開発版では[返信待ち・Jevによる並べ替え](docs/reply-priority.md)を復元しています。実Jevの品質基準はまだ満たしておらず、実画面の受入検証も進行中です。AIを使う場合だけ、任意のTypeSafe APIキーが必要です。
+Open the settings from Raycast Settings → Extensions → Slack Compass.
 
-メッセージ詳細では、選択した投稿までのスレッドの経緯を読めます。過去投稿の取得には任意の履歴権限が必要です。[使い方](docs/usage.md)を参照してください。
+| Setting                      | Description                                                                                                                                                                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Slack Access Token           | Required. Your Slack User OAuth Token (`xoxp-`).                                                                                                                                                                                                      |
+| Previous Handles             | Optional. Previous Slack handles, separated by commas.                                                                                                                                                                                                |
+| Background Refresh Frequency | How often the Refresh Slack Directory command refreshes channels: 30 Minutes (default), 1 Hour, 3 Hours, or Off. People refresh every 24 hours. See [Choose a background refresh frequency](docs/reference.md#choose-a-background-refresh-frequency). |
+| Slack API Distribution       | Unknown (60 Seconds) by default. Choose Verified Internal or Marketplace (1.3 Seconds) only if your Slack app is internal to your workspace or approved for the Slack Marketplace. See [Rate limits](docs/reference.md#rate-limits).                  |
 
-下書き、スレッド外の前後履歴、リアクション、ブックマーク、Listsは未対応です。[対応予定](docs/roadmap.md)で確認できます。
+Slack Compass stores its cache and settings in `~/Library/Application Support/com.raycast.macos/extensions/slack-compass/`. See [Settings, stored data, and troubleshooting](docs/reference.md).
 
-## 更新・困ったとき
+## Troubleshooting
 
-更新は拡張のフォルダで`git pull --ff-only` → `npm ci` → `npm run dev`を実行します。
+- If Slack Compass shows "Delivery has not been confirmed", the message may have been sent. Choose Open Conversation (or Open Parent Message for a reply) and check Slack before you send it again. Sending again can post the same message twice.
+- For `missing_scope`, add the scope that Slack Compass names to User Token Scopes, reinstall the app, and update the token in Raycast if it changed.
+- To update the extension, run `git pull --ff-only`, `npm ci`, and `npm run dev` in the extension folder.
 
-「送れたか未確認です」と出た場合は、Slackで届いたかを確認してから再送してください。届いていると二重投稿になります。
+See [Settings, stored data, and troubleshooting](docs/reference.md#troubleshooting) for more. If a problem remains, open a [GitHub issue](https://github.com/shinonomelon/raycast-slack-hub/issues) with the steps you took and the error shown. Do not include tokens or real message text.
 
-[設定・トラブル対応](docs/reference.md)と[開発手順](docs/development.md)も参照してください。解決しなければ[GitHub Issues](https://github.com/shinonomelon/raycast-slack-hub/issues)へ操作手順とエラーを報告できます。トークンや実際のメッセージ本文は含めないでください。
+## Development
+
+Use Node.js 22.22.2 or later.
+
+```bash
+npm ci
+npm run dev    # watch and load the extension into Raycast
+npm test       # run all src/**/*.test.ts files
+npm run lint   # needs network access to fetch the Raycast schema
+```
+
+Also run `npx tsc --noEmit` and `npm run build` before you submit a change. Most tests use sample Slack responses and make no network calls. Passing tests do not replace checking against the real Slack API and Raycast.
+
+Slack Compass records request counts locally to help diagnose rate limits. It stores only the API method, the calling action, and counts for requests, 429 responses, wait time, merged reads, and cache hits. It never stores message text, search queries, conversation IDs, user IDs, or credentials. The data is saved per day, for up to 7 days and 256 rows, in `request-metrics.json` in the extension's support folder. To investigate a rate limit, find the action in `source` and the API in `method`, then compare `requests`, `rateLimited`, `waitMs`, `coalesced`, and `cacheHits` before and after the action.
+
+Do not put tokens or real Slack messages in tests, logs, or issues.
+
+## Known limitations
+
+Slack Compass does not support drafts, history around a message outside its thread, reactions, channel bookmarks, or Slack Lists. Track these features in [GitHub Issues](https://github.com/shinonomelon/raycast-slack-hub/issues).

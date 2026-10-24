@@ -1,4 +1,4 @@
-// Slack Hub自身の設定を読む純粋な関数。
+// Slack Compass 自身の設定を読む純粋な関数。
 // ファイルの読み書きは prefs-store.ts が行う。@raycast/api を読み込まないので、node のテストから動かせる
 import {
   MEMBERSHIPS,

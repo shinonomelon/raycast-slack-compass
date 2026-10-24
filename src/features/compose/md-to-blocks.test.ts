@@ -321,6 +321,6 @@ test("1sectionに収まらない単一リンクやgraphemeは破損させず拒�
     "https://example.com/" + "a".repeat(3000),
     "a" + "\u0301".repeat(3000),
   ]) {
-    assert.throws(() => toBlocks(body), /3000/);
+    assert.throws(() => toBlocks(body), /3,000/);
   }
 });

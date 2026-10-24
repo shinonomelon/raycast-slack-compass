@@ -104,7 +104,9 @@ test("fetchIdentity が取れなければ、何も取り直さず、投げずに
   // 取り直し（Slack の取得と Cache への書き込み）は1つも呼ばれない
   assert.deepEqual(refreshed, []);
   assert.equal(logs.length, 1);
-  assert.ok(logs[0].includes("Slackに自分の情報を問い合わせられませんでした"));
+  assert.ok(
+    logs[0].includes("Could not retrieve your Slack account information"),
+  );
   assert.ok(logs[0].includes("Slack Access Tokenを確認してください"));
 });
 

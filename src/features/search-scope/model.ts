@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import { createHash } from "node:crypto";
 import type { Conversation } from "../../shared/types.ts";
 import type { ChannelLibrary } from "../channel-library/model.ts";
@@ -106,15 +105,15 @@ export function validateScopeSelection(
     range.kind === "section" &&
     !library.sections.some((s) => s.id === range.sectionId)
   )
-    return t("セクションを選び直してください");
+    return "Choose a section again";
   if (
     range.kind === "channel" &&
     !conversations.some((c) => c.id === range.channelId && c.type !== "mpim")
   )
-    return t("チャンネルを選び直してください");
+    return "Choose a channel again";
   if (scope.senderId !== undefined && !validSenderId(scope.senderId))
-    return t("投稿者を選び直してください");
+    return "Choose a sender again";
   if (showMessages && range.kind === "all" && !scope.senderId)
-    return t("範囲または投稿者を指定してください");
+    return "Select a scope or sender";
   return undefined;
 }

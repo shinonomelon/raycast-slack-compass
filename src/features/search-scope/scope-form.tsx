@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import { Action, ActionPanel, Form, useNavigation } from "@raycast/api";
 import { useState } from "react";
 import type { Conversation, Person } from "../../shared/types.ts";
@@ -75,13 +74,13 @@ export function ScopeForm({
   };
   return (
     <Form
-      navigationTitle={t("検索条件を選ぶ")}
+      navigationTitle="Choose Search Filters"
       actions={
         <ActionPanel>
-          <Action title={t("適用")} onAction={() => apply()} />
-          <Action title={t("メッセージを表示")} onAction={() => apply(true)} />
+          <Action title="Apply" onAction={() => apply()} />
+          <Action title="Show Messages" onAction={() => apply(true)} />
           <Action
-            title={t("条件をクリアして適用")}
+            title="Clear Filters and Apply"
             onAction={() => {
               onApply(DEFAULT_SEARCH_SCOPE, {});
               pop();
@@ -89,7 +88,7 @@ export function ScopeForm({
           />
           {onManage && (
             <Action
-              title={t("セクションを管理")}
+              title="Manage Sections"
               onAction={() =>
                 onManage(library, (next) => {
                   setLibrary(next);
@@ -103,25 +102,22 @@ export function ScopeForm({
     >
       <Form.Dropdown
         id="range"
-        title={t("検索範囲")}
+        title="Search Scope"
         value={kind}
         onChange={(value) => {
           setKind(value as typeof kind);
           setError(undefined);
         }}
       >
-        <Form.Dropdown.Item value="all" title={t("すべて")} />
-        <Form.Dropdown.Item
-          value="favorites"
-          title={t("お気に入りチャンネル")}
-        />
-        <Form.Dropdown.Item value="section" title={t("セクション")} />
-        <Form.Dropdown.Item value="channel" title={t("チャンネル")} />
+        <Form.Dropdown.Item value="all" title="All" />
+        <Form.Dropdown.Item value="favorites" title="Favorite Channels" />
+        <Form.Dropdown.Item value="section" title="Section" />
+        <Form.Dropdown.Item value="channel" title="Channels" />
       </Form.Dropdown>
       {kind === "section" && (
         <Form.Dropdown
           id="section"
-          title={t("セクション")}
+          title="Section"
           value={sectionId}
           onChange={setSectionId}
           error={error}
@@ -131,8 +127,8 @@ export function ScopeForm({
               value={sectionId}
               title={
                 sectionId
-                  ? t("選択したセクションは削除されています")
-                  : t("セクションを選んでください")
+                  ? "The selected section was deleted"
+                  : "Choose a section"
               }
             />
           )}
@@ -146,7 +142,7 @@ export function ScopeForm({
       {kind === "channel" && (
         <Form.Dropdown
           id="channel"
-          title={t("チャンネル")}
+          title="Channels"
           value={channelId}
           onChange={setChannelId}
           error={error}
@@ -158,14 +154,14 @@ export function ScopeForm({
       )}
       <Form.Dropdown
         id="sender"
-        title={t("投稿者")}
+        title="Sender"
         value={senderId}
         onChange={(id) => {
           setSenderId(id);
           setError(undefined);
         }}
       >
-        <Form.Dropdown.Item value="" title={t("指定なし")} />
+        <Form.Dropdown.Item value="" title="None" />
         {people.map((p) => (
           <Form.Dropdown.Item
             key={p.id}
@@ -177,9 +173,7 @@ export function ScopeForm({
       <Form.Description
         text={
           error ??
-          t(
-            "範囲内の投稿と投稿者の両方に一致するメッセージを探します。適用するまで検索は始まりません。",
-          )
+          "Find messages matching both the scope and sender. Search starts only after applying the filters."
         }
       />
     </Form>

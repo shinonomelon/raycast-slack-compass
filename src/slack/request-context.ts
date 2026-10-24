@@ -24,7 +24,3 @@ export function apiWithSource(api: ApiCall, source: ApiSource): ApiCall {
 export function recordRequestCacheHit(api: ApiCall, source: ApiSource) {
   metadata.get(api)?.metrics?.record(source, "cache", "cacheHits");
 }
-export function copyApiContext(from: ApiCall, to: ApiCall): void {
-  const data = metadata.get(from);
-  if (data) metadata.set(to, data);
-}

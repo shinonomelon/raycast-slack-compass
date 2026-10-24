@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import type { Block } from "./md-to-blocks.ts";
 // https://docs.slack.dev/reference/block-kit/blocks/section-block/
 export const SECTION_TEXT_LIMIT = 3000;
@@ -9,9 +8,7 @@ export class MessageLimitError extends Error {}
 export function validateMessageBlocks(blocks: readonly Block[]): void {
   if (blocks.length > MESSAGE_BLOCK_LIMIT)
     throw new MessageLimitError(
-      t(
-        "本文がSlackの50 blocks上限を超えています。本文を分けて投稿してください。投稿は送信していません",
-      ),
+      "The message exceeds Slack's 50-block limit. Split it into separate posts. Nothing was sent",
     );
   for (const block of blocks) {
     if (block.type !== "section") continue;
@@ -28,9 +25,7 @@ export function validateMessageBlocks(blocks: readonly Block[]): void {
       text.length > SECTION_TEXT_LIMIT
     )
       throw new MessageLimitError(
-        t(
-          "本文がSlackのsectionの1〜3000文字上限に収まりません。本文を確認してください。投稿は送信していません",
-        ),
+        "The message does not fit Slack's 1–3,000-character section limit. Check the message. Nothing was sent",
       );
   }
 }

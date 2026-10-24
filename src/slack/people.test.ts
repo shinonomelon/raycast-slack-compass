@@ -91,10 +91,10 @@ test("メンション欄の名前は、表示名・本名・ハンドルのど�
   const people = toPeople(raw);
   const labels = new Map(people.map((p) => [p.id, mentionLabel(p)]));
   // 本名が表示名と違う人
-  assert.equal(labels.get("U1"), "佐藤（佐藤 由 @sato_y）");
+  assert.equal(labels.get("U1"), "佐藤 (佐藤 由 @sato_y)");
   // ボット。ExampleBot と打てば候補に出る
-  assert.equal(labels.get("U3"), "ExampleBot（@shinonomelobot）");
+  assert.equal(labels.get("U3"), "ExampleBot (@shinonomelobot)");
   assert.ok(labels.get("U3")?.includes("ExampleBot"));
   // 本名が表示名と同じ人（ここでは、どちらもハンドルで代えた人）は、本名を重ねず、ハンドルだけを足す
-  assert.equal(labels.get("U5"), "jones_f（@jones_f）");
+  assert.equal(labels.get("U5"), "jones_f (@jones_f)");
 });

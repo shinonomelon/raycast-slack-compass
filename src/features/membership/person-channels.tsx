@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import {
   Action,
   ActionPanel,
@@ -31,7 +30,7 @@ export function PersonChannels({
   const [detail, setDetail] = useState(false);
   const hideDetails = detail ? (
     <Action
-      title={t("Hide Details")}
+      title="Hide Details"
       icon={Icon.Sidebar}
       shortcut={DETAILS_SHORTCUT}
       onAction={() => setDetail(false)}
@@ -42,19 +41,14 @@ export function PersonChannels({
   const labels = ids.map(
     (id) =>
       context.people.find((person) => person.id === id)?.displayName ??
-      (context.session.fetchAs?.userId === id ? t("自分") : id),
+      (context.session.fetchAs?.userId === id ? "You" : id),
   );
-  const conditions = t(
-    "全員が参加（{0}/{1}人）: {2}",
-    ids.length,
-    MAX_PEOPLE,
-    labels.join("・"),
-  );
+  const conditions = `Joined by Everyone (${ids.length}/${MAX_PEOPLE} people): ${labels.join(", ")}`;
   const controls = [
     context.session.canFetch && ids.length < MAX_PEOPLE ? (
       <Action.Push
         key="add-person"
-        title={t("Add Person")}
+        title="Add Person"
         icon={Icon.AddPerson}
         target={
           <PersonPicker
@@ -68,7 +62,7 @@ export function PersonChannels({
     context.session.canFetch && ids.length > 1 ? (
       <Action.Push
         key="remove-person"
-        title={t("Remove Person")}
+        title="Remove Person"
         icon={Icon.Person}
         target={
           <PersonPicker
@@ -83,7 +77,7 @@ export function PersonChannels({
     context.session.canFetch ? (
       <Action
         key="reset-people"
-        title={t("Reset People")}
+        title="Reset People"
         icon={Icon.ArrowCounterClockwise}
         onAction={() => setIds([personId])}
       />
@@ -91,14 +85,14 @@ export function PersonChannels({
     context.session.canFetch ? (
       <Action
         key="refresh"
-        title={t("Refresh")}
+        title="Refresh"
         icon={Icon.ArrowClockwise}
         onAction={state.refresh}
       />
     ) : null,
     <Action
       key="preferences"
-      title={t("Open Extension Preferences")}
+      title="Open Extension Preferences"
       icon={Icon.Gear}
       onAction={openExtensionPreferences}
     />,
@@ -106,8 +100,8 @@ export function PersonChannels({
   const [primaryControl, ...otherControls] = controls;
   return (
     <List
-      navigationTitle={t("参加チャンネル")}
-      searchBarPlaceholder={t("チャンネル名・別名で絞り込む")}
+      navigationTitle="Joined Channels"
+      searchBarPlaceholder="Filter by channel name or alias"
       searchText={text}
       onSearchTextChange={setText}
       filtering={false}
@@ -120,18 +114,14 @@ export function PersonChannels({
           state.status === "rate-limited" ||
           state.status === "deferred" ||
           state.status === "auth-required"
-            ? t("参加チャンネルを取得できません")
+            ? "Could not load joined channels"
             : state.status === "loading"
-              ? t("参加チャンネルを取得中")
+              ? "Loading joined channels"
               : text
-                ? t("名前に一致するチャンネルがありません")
-                : t("この条件のチャンネルはありません")
+                ? "No channels match this name"
+                : "No channels match these filters"
         }
-        description={t(
-          "{0}\n公開チャンネルと、自分も参加する非公開チャンネル（アーカイブ除外）\n{1}",
-          conditions,
-          membershipStatus(state),
-        )}
+        description={`${conditions}\nPublic channels and private channels you have joined (excluding archived channels)\n${membershipStatus(state)}`}
         actions={
           <ActionPanel>
             {primaryControl}
@@ -142,10 +132,7 @@ export function PersonChannels({
       />
       <List.Section
         title={conditions}
-        subtitle={t(
-          "公開・自分も参加する非公開（アーカイブ除外） \u00B7 {0}",
-          membershipStatus(state),
-        )}
+        subtitle={`Public channels and private channels you have joined (excluding archived) · ${membershipStatus(state)}`}
       >
         {rows.map((row) => (
           <List.Item
@@ -157,7 +144,7 @@ export function PersonChannels({
             actions={
               <ActionPanel>
                 <Action.Open
-                  title={t("Open in Slack")}
+                  title="Open in Slack"
                   target={slackAppChannelLink(
                     context.session.display.teamId,
                     row.id,
@@ -165,13 +152,13 @@ export function PersonChannels({
                   application="Slack"
                 />
                 <Action
-                  title={detail ? t("Hide Details") : t("Show Details")}
+                  title={detail ? "Hide Details" : "Show Details"}
                   icon={Icon.Sidebar}
                   shortcut={DETAILS_SHORTCUT}
                   onAction={() => setDetail((value) => !value)}
                 />
                 <Action.Push
-                  title={t("Write")}
+                  title="Write"
                   shortcut={WRITE_SHORTCUT}
                   target={
                     <ComposeForm
@@ -182,7 +169,7 @@ export function PersonChannels({
                   }
                 />
                 <Action.Push
-                  title={t("Search in This Conversation")}
+                  title="Search in This Conversation"
                   icon={Icon.MagnifyingGlass}
                   target={
                     <ConversationMessages
@@ -196,7 +183,7 @@ export function PersonChannels({
                   }
                 />
                 <Action.Push
-                  title={t("View Members")}
+                  title="View Members"
                   icon={Icon.TwoPeople}
                   target={
                     <ChannelMembers

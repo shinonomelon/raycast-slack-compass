@@ -35,7 +35,7 @@ test("切れた旧キャッシュだけに短いプレビュー表示を付け�
   assert.ok(preview);
   assert.equal(
     messageDetailBody(preview, names),
-    `プレビュー（⌘Rで全文を取得）\n\n${text}`,
+    `Preview (⌘R to fetch the full message)\n\n${text}`,
   );
   assert.equal(
     messageDetailBody(preview, names, "取得した全文"),
@@ -83,8 +83,8 @@ test("投稿ブロックは選択した本文を先頭にし、過去を降順�
   assert.ok(rendered.indexOf("body-3") < rendered.indexOf("body-2"));
   assert.ok(rendered.indexOf("body-2") < rendered.indexOf("body-1"));
   assert.ok(!rendered.includes("body-4"));
-  assert.ok(rendered.includes("選択したメッセージ"));
-  assert.ok(rendered.includes("スレッドの親投稿"));
+  assert.ok(rendered.includes("Selected message"));
+  assert.ok(rendered.includes("Thread parent"));
   assert.equal(rendered.split("dev").length - 1, 1);
 });
 
@@ -108,27 +108,17 @@ test("名前のMarkdown記号をエスケープし、本文やメンションは
   assert.ok(rendered.includes("**本文の太字**"));
 });
 
-test("日時は日本語で曜日を含め、言語切り替えと異なる年を反映する", async () => {
+test("日時は英語（en-US）で書式化し、異なる年だけ年を付ける", async () => {
   const { messageTime } = await import("./message-detail.ts");
-  const { setLanguage } = await import("../../shared/i18n.ts");
   const date = new Date(2026, 9, 9, 13, 21);
   const value = String(date.getTime() / 1000);
-  const weekday = new Intl.DateTimeFormat("ja-JP", { weekday: "short" }).format(
-    date,
+  // ICUの版によってPMの前の空白がU+202Fになるため、空白は\sで受ける。
+  assert.match(messageTime(value, date), /^Oct 9, 1:21\sPM$/);
+  assert.match(
+    messageTime(value, new Date(2027, 0, 1)),
+    /^Oct 9, 2026, 1:21\sPM$/,
   );
-  try {
-    setLanguage("ja");
-    assert.equal(messageTime(value, date), `10月9日（${weekday}）13:21`);
-    assert.equal(
-      messageTime(value, new Date(2027, 0, 1)),
-      `2026年10月9日（${weekday}）13:21`,
-    );
-    setLanguage("en");
-    assert.ok(messageTime(value, date).includes("Oct"));
-    assert.ok(!/[ぁ-んァ-ヶ一-龠]/.test(messageTime(value, date)));
-  } finally {
-    setLanguage("ja");
-  }
+  assert.ok(!/[ぁ-んァ-ヶ一-龠]/.test(messageTime(value, date)));
 });
 
 test("親投稿と単発投稿は本文を一度だけ表示し、親の目印を取得情報から決める", async () => {
@@ -158,77 +148,61 @@ test("親投稿と単発投稿は本文を一度だけ表示し、親の目印�
       },
     );
     assert.equal(value.split("only-body").length - 1, 1);
-    assert.equal(value.includes("スレッドの親投稿"), isThread);
+    assert.equal(value.includes("Thread parent"), isThread);
   }
 });
 
-test("失敗・取得途中・上限の文言を両言語で表示し、選択本文を残す", async () => {
+test("失敗・取得途中・上限の文言を英語で表示し、選択本文を残す", async () => {
   const { messageDetailMarkdown } = await import("./message-detail.ts");
   const { buildNames } = await import("../../slack/names.ts");
-  const { setLanguage } = await import("../../shared/i18n.ts");
   const selected = normalizeMatch(
     { ts: "1.000000", channel: { id: "C1" }, text: "unchanged-body" },
     "SELF",
   )!;
-  try {
-    for (const language of ["ja", "en"]) {
-      setLanguage(language);
-      for (const kind of [
-        "scope",
-        "rate",
-        "missing",
-        "invalid",
-        "failed",
-      ] as const) {
-        const value = messageDetailMarkdown(
-          selected,
-          buildNames([], [], []),
-          undefined,
-          {
-            failure: { kind, retryAt: Date.now() + 1000 },
-            loading: false,
-            more: () => {},
-            refresh: () => {},
-          },
-        );
-        assert.ok(value.includes("unchanged-body"));
-        if (language === "en") assert.ok(!/[ぁ-んァ-ヶ一-龠]/.test(value));
-      }
-      for (const capped of [true, false]) {
-        const value = messageDetailMarkdown(
-          selected,
-          buildNames([], [], []),
-          undefined,
-          {
-            data: {
-              messages: [],
-              rootTs: selected.ts,
-              isThread: false,
-              pages: 1,
-              cursor: capped ? undefined : "next",
-              seen: [],
-              capped,
-            },
-            loading: false,
-            more: () => {},
-            refresh: () => {},
-          },
-        );
-        assert.ok(value.includes("unchanged-body"));
-        assert.ok(
-          value.includes(
-            language === "en"
-              ? capped
-                ? "Fetch limit reached"
-                : "More messages remain"
-              : capped
-                ? "取得上限"
-                : "取得途中",
-          ),
-        );
-      }
-    }
-  } finally {
-    setLanguage("ja");
+  for (const kind of [
+    "scope",
+    "rate",
+    "missing",
+    "invalid",
+    "failed",
+  ] as const) {
+    const value = messageDetailMarkdown(
+      selected,
+      buildNames([], [], []),
+      undefined,
+      {
+        failure: { kind, retryAt: Date.now() + 1000 },
+        loading: false,
+        more: () => {},
+        refresh: () => {},
+      },
+    );
+    assert.ok(value.includes("unchanged-body"));
+    assert.ok(!/[ぁ-んァ-ヶ一-龠]/.test(value));
+  }
+  for (const capped of [true, false]) {
+    const value = messageDetailMarkdown(
+      selected,
+      buildNames([], [], []),
+      undefined,
+      {
+        data: {
+          messages: [],
+          rootTs: selected.ts,
+          isThread: false,
+          pages: 1,
+          cursor: capped ? undefined : "next",
+          seen: [],
+          capped,
+        },
+        loading: false,
+        more: () => {},
+        refresh: () => {},
+      },
+    );
+    assert.ok(value.includes("unchanged-body"));
+    assert.ok(
+      value.includes(capped ? "Fetch limit reached" : "More messages remain"),
+    );
   }
 });

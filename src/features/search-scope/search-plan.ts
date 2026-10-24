@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import {
   parseQuery,
   resolveQuery,
@@ -57,7 +56,7 @@ export function createMessageSearchPlan({
     (scope.channelIds !== "all" &&
       scope.channelIds.some((id) => !validChannelId(id)))
   )
-    conflicts.push(t("検索条件のIDが不正です"));
+    conflicts.push("Invalid search filter ID");
   const positive = parseQuery(text).tokens.filter(
     (t) =>
       t.type === "filter" &&
@@ -71,14 +70,16 @@ export function createMessageSearchPlan({
           .length > 1,
     )
   )
-    conflicts.push(t("複数のin/from条件は選択条件と併用できません"));
+    conflicts.push(
+      "Multiple in/from filters cannot be combined with selected filters",
+    );
   // 括弧・ORによる結合は既存の単語resolverでは意味を保証できない。
   const unquoted = text.replace(/"[^"\\]*(?:\\.[^"\\]*)*"/g, "");
   const hasOr = parseQuery(unquoted).tokens.some(
     (token) => token.type === "text" && /^OR$/i.test(token.raw),
   );
   if (/[()]/.test(unquoted) || hasOr)
-    conflicts.push(t("括弧またはORの条件を修正してください"));
+    conflicts.push("Change the parentheses or OR conditions");
   if (
     resolved.unresolved.some(
       (t) => t.modifier === "in" || t.modifier === "from",
@@ -87,9 +88,9 @@ export function createMessageSearchPlan({
       (resolved.completing.modifier === "in" ||
         resolved.completing.modifier === "from"))
   )
-    conflicts.push(t("in/from条件の対象を確定してください"));
+    conflicts.push("Resolve the target of the in/from filter");
   if (positive.some((token) => token.type === "filter" && !token.value.trim()))
-    conflicts.push(t("in/from条件の値を指定してください"));
+    conflicts.push("Enter a value for the in/from filter");
   if (conflicts.length) return finish([]);
   let channels = scope.channelIds;
   let senderId = scope.senderId;
@@ -119,7 +120,7 @@ export function createMessageSearchPlan({
       if (senderId && senderId !== id) empty = true;
       else senderId = id;
     } else {
-      conflicts.push(t("in/from条件を安全に解釈できません"));
+      conflicts.push("Could not safely interpret the in/from filter");
     }
   }
   if (empty || conflicts.length) return finish([], channels, senderId);
@@ -135,30 +136,4 @@ export function createMessageSearchPlan({
     channels,
     senderId,
   );
-}
-export function createReplySearchPlan(
-  scope: ResolvedScope,
-  selfId: string,
-  afterDate: string,
-  beforeDate?: string,
-): string[] {
-  if (
-    !validSenderId(selfId) ||
-    (scope.senderId !== undefined && !validSenderId(scope.senderId)) ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(afterDate) ||
-    (beforeDate !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(beforeDate)) ||
-    (scope.channelIds !== "all" &&
-      scope.channelIds.some((id) => !validChannelId(id)))
-  )
-    throw new Error(t("検索計画の条件が不正です"));
-  const suffix = [
-    `after:${afterDate}`,
-    ...(beforeDate ? [`before:${beforeDate}`] : []),
-    ...(scope.senderId ? [`from:<@${scope.senderId}>`] : []),
-  ].join(" ");
-  return scope.channelIds === "all"
-    ? [`<@${selfId}> ${suffix}`, `to:me ${suffix}`]
-    : [...new Set(scope.channelIds)]
-        .sort()
-        .map((id) => `<@${selfId}> in:<#${id}> ${suffix}`);
 }

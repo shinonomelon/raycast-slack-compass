@@ -1,4 +1,3 @@
-import { t } from "../shared/i18n.ts";
 import { normalizeMatch, type Hit } from "./hits.ts";
 import { toPeople, type RawUser } from "./people.ts";
 import {
@@ -34,7 +33,7 @@ async function listPages(
   do {
     const remaining = LIST_TIMEOUT_MS - (Date.now() - started);
     if (remaining <= 0)
-      throw new SlackApiError("timeout", t("一覧の取得が時間切れになりました"));
+      throw new SlackApiError("timeout", "Directory request timed out");
     const data = await api(
       method,
       { ...params, limit: 200, ...(cursor ? { cursor } : {}) },
@@ -43,7 +42,7 @@ async function listPages(
     if (!Array.isArray(data[field]))
       throw new SlackApiError(
         "unreadable",
-        t("一覧の応答を読み取れませんでした"),
+        "Could not read the directory response",
       );
     rows.push(...data[field]);
     const next = object(data.response_metadata).next_cursor;
@@ -51,7 +50,7 @@ async function listPages(
     if (cursor && seen.has(cursor))
       throw new SlackApiError(
         "unreadable",
-        t("一覧のカーソルが繰り返されました"),
+        "The directory returned a repeated cursor",
       );
     if (cursor) seen.add(cursor);
   } while (cursor);
@@ -205,7 +204,10 @@ export async function searchPage(
     if (signal?.aborted) return { kind: "aborted" };
     const messages = object(data.messages);
     if (!Array.isArray(messages.matches))
-      throw new SlackApiError("unreadable", t("検索結果にmatchesがありません"));
+      throw new SlackApiError(
+        "unreadable",
+        "The search response has no matches field",
+      );
     const hits = messages.matches
       .map((m) => normalizeMatch(m, selfId))
       .filter((hit): hit is Hit => hit !== undefined);
@@ -296,10 +298,7 @@ export async function getLastReads(
     try {
       const remaining = deadlineAt - now();
       if (remaining <= 0)
-        throw new SlackApiError(
-          "timeout",
-          t("既読位置の取得が時間切れになりました"),
-        );
+        throw new SlackApiError("timeout", "Read position request timed out");
       const data = await options.api(
         "conversations.info",
         { channel: channelId },
@@ -313,7 +312,7 @@ export async function getLastReads(
       if (channel.id !== channelId)
         throw new SlackApiError(
           "unreadable",
-          t("既読位置の応答の会話IDが一致しません"),
+          "The read position response has a different conversation ID",
         );
       const ts = channel.last_read;
       rows.push(

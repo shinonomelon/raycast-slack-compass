@@ -1,5 +1,4 @@
 import { getApiCredentialKey } from "../../slack/request-context.ts";
-import { t } from "../../shared/i18n.ts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   readAccountSearchPause,
@@ -119,7 +118,7 @@ export function useMessageSearch(
           ? {
               kind: "failed",
               query: expression,
-              message: current.plan.conflicts.join("・"),
+              message: current.plan.conflicts.join("; "),
             }
           : { kind: "skipped", query: expression, reason: "empty" },
       );
@@ -129,7 +128,7 @@ export function useMessageSearch(
     const structured =
       current.plan &&
       (current.plan.scope.channelIds !== "all" || current.plan.scope.senderId);
-    const gateQuery = structured ? t("条件検索") : expression;
+    const gateQuery = structured ? "Filtered Search" : expression;
     const decision = decideSearch(
       gateQuery,
       readAccountSearchPause(account),
@@ -203,7 +202,7 @@ export function useMessageSearch(
         skip({
           kind: "failed",
           query: expression,
-          message: t("検索に失敗しました。更新して再試行してください"),
+          message: "Search failed. Refresh to try again",
         });
     });
     return () => controller.abort();

@@ -146,7 +146,7 @@ test("自分宛ての取得結果は保存後も全文を表示し、保存結�
   assert.equal(cached.value.hits[0].textIsPreview, true);
   assert.ok(
     messageDetailBody(cached.value.hits[0], names).startsWith(
-      "プレビュー（⌘Rで全文を取得）",
+      "Preview (⌘R to fetch the full message)",
     ),
   );
   assert.equal(calls, 2);

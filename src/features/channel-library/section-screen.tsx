@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import {
   Action,
   ActionPanel,
@@ -41,7 +40,7 @@ function MutationForm({
   const save = async () => {
     if (saving) return;
     if (!conversations && !name.trim()) {
-      setError(t("名前を入力してください"));
+      setError("Enter a name");
       return;
     }
     setSaving(true);
@@ -49,14 +48,10 @@ function MutationForm({
       if (await onSave(name.trim(), ids)) pop();
       else
         setError(
-          t(
-            "保存できませんでした。名前の重複や整理ファイルの状態を確認してください",
-          ),
+          "Could not save. Check for duplicate names or a problem with the channel library file",
         );
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : t("保存できませんでした"),
-      );
+      setError(error instanceof Error ? error.message : "Could not save");
     } finally {
       setSaving(false);
     }
@@ -70,14 +65,14 @@ function MutationForm({
       isLoading={saving}
       actions={
         <ActionPanel>
-          <Action title={t("保存")} onAction={save} />
+          <Action title="Save" onAction={save} />
         </ActionPanel>
       }
     >
       {conversations ? (
         <Form.TagPicker
           id="channels"
-          title={t("所属チャンネル")}
+          title="Channels in Section"
           value={ids}
           onChange={setIds}
           error={error}
@@ -98,24 +93,20 @@ function MutationForm({
               <Form.TagPicker.Item
                 key={id}
                 value={id}
-                title={t("{0}（現在参照できません）", id)}
+                title={`${id} (currently unavailable)`}
               />
             ))}
         </Form.TagPicker>
       ) : (
         <Form.TextField
           id="name"
-          title={t("セクション名")}
+          title="Section Name"
           value={name}
           onChange={setName}
           error={error}
         />
       )}
-      <Form.Description
-        text={t(
-          "保存するまで変更は反映されません。お気に入りとセクション所属は独立しています。",
-        )}
-      />
+      <Form.Description text="Changes take effect when saved. Favorites and section membership are independent." />
     </Form>
   );
 }
@@ -134,17 +125,17 @@ export function SectionScreen({
       setError(undefined);
       return true;
     }
-    setError(t("整理データを保存できませんでした"));
+    setError("Could not save the channel library");
     return false;
   };
   const create = (
     <Action
-      title={t("セクションを作成")}
+      title="Create Section"
       icon={Icon.Plus}
       onAction={() =>
         push(
           <MutationForm
-            title={t("セクションを作成")}
+            title="Create Section"
             onSave={(name) => mutate({ kind: "create-section", name })}
           />,
         )
@@ -153,8 +144,8 @@ export function SectionScreen({
   );
   return (
     <List
-      navigationTitle={t("セクションを管理")}
-      searchBarPlaceholder={t("セクションを探す")}
+      navigationTitle="Manage Sections"
+      searchBarPlaceholder="Search sections"
       actions={<ActionPanel>{create}</ActionPanel>}
     >
       {error && (
@@ -170,16 +161,16 @@ export function SectionScreen({
           <List.Item
             key={section.id}
             title={section.name}
-            subtitle={t("{0}チャンネル", section.channelIds.length)}
+            subtitle={`${section.channelIds.length} channels`}
             icon={Icon.Folder}
             actions={
               <ActionPanel>
                 <Action
-                  title={t("所属チャンネルを編集")}
+                  title="Edit Channels"
                   onAction={() =>
                     push(
                       <MutationForm
-                        title={t("{0}の所属", section.name)}
+                        title={`Channels in ${section.name}`}
                         initialIds={section.channelIds}
                         conversations={conversations}
                         onSave={(_, channelIds) =>
@@ -194,11 +185,11 @@ export function SectionScreen({
                   }
                 />
                 <Action
-                  title={t("名前を変更")}
+                  title="Rename"
                   onAction={() =>
                     push(
                       <MutationForm
-                        title={t("名前を変更")}
+                        title="Rename"
                         initialName={section.name}
                         onSave={(name) =>
                           mutate({
@@ -213,15 +204,16 @@ export function SectionScreen({
                 />
                 {create}
                 <Action
-                  title={t("セクションを削除")}
+                  title="Delete Section"
                   style={Action.Style.Destructive}
                   onAction={async () => {
                     if (
                       await confirmAlert({
-                        title: t("「{0}」を削除しますか？", section.name),
-                        message: t("このセクションの所属設定を削除します。"),
+                        title: `Delete "${section.name}"?`,
+                        message:
+                          "This removes the section and its channel membership settings.",
                         primaryAction: {
-                          title: t("削除"),
+                          title: "Delete",
                           style: Alert.ActionStyle.Destructive,
                         },
                       })
@@ -237,8 +229,8 @@ export function SectionScreen({
           />
         ))}
       <List.EmptyView
-        title={t("セクションがありません")}
-        description={t("Actionsからセクションを作成できます")}
+        title="No sections"
+        description="Create a section from Actions"
         actions={<ActionPanel>{create}</ActionPanel>}
       />
     </List>
@@ -265,12 +257,12 @@ export function SectionMembershipForm({
   const [saving, setSaving] = useState(false);
   return (
     <Form
-      navigationTitle={t("#{0}の所属", channelName)}
+      navigationTitle={`Sections for #${channelName}`}
       isLoading={saving}
       actions={
         <ActionPanel>
           <Action
-            title={t("保存")}
+            title="Save"
             onAction={async () => {
               if (saving) return;
               setSaving(true);
@@ -283,12 +275,10 @@ export function SectionMembershipForm({
                   })
                 )
                   pop();
-                else setError(t("保存できませんでした。再試行してください"));
+                else setError("Could not save. Please try again");
               } catch (error) {
                 setError(
-                  error instanceof Error
-                    ? error.message
-                    : t("保存できませんでした"),
+                  error instanceof Error ? error.message : "Could not save",
                 );
               } finally {
                 setSaving(false);
@@ -300,7 +290,7 @@ export function SectionMembershipForm({
     >
       <Form.TagPicker
         id="sections"
-        title={t("所属セクション")}
+        title="Sections"
         value={sectionIds}
         onChange={setSectionIds}
         error={error}
@@ -311,11 +301,7 @@ export function SectionMembershipForm({
             <Form.TagPicker.Item key={s.id} value={s.id} title={s.name} />
           ))}
       </Form.TagPicker>
-      <Form.Description
-        text={t(
-          "複数のセクションへ所属できます。お気に入りを外しても所属は変わりません。",
-        )}
-      />
+      <Form.Description text="A channel can belong to multiple sections. Removing a favorite does not change its sections." />
     </Form>
   );
 }

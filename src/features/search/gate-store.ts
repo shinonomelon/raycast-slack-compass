@@ -49,7 +49,7 @@ export function writePause(
 }
 
 const accountPauses = new Map<string, Pause>();
-// アカウント内の通常検索と返信待ちで検索APIの停止期限を共有する。
+// アカウント内の検索で、検索APIの停止期限を共有する。
 export function readAccountSearchPause(
   account: string,
   now = Date.now(),

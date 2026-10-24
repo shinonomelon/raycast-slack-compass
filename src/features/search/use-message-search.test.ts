@@ -1,4 +1,3 @@
-import * as i18n from "../../shared/i18n.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -81,7 +80,7 @@ function harness() {
     ).outputText,
     {
       exports,
-      require: (id: string) => (id.endsWith("/i18n.ts") ? i18n : deps[id]),
+      require: (id: string) => deps[id],
       AbortController,
       Date,
       setTimeout: (fn: () => void) => {

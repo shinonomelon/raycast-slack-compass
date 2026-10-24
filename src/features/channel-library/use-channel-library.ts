@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import { environment } from "@raycast/api";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Conversation } from "../../shared/types.ts";
@@ -72,7 +71,7 @@ export function useChannelLibrary({
           error:
             error instanceof Error
               ? error.message
-              : t("整理データを保存できませんでした。再試行してください"),
+              : "Could not save the channel library. Please try again",
         }));
     }
   }, []);
@@ -112,7 +111,7 @@ export function useChannelLibrary({
             error:
               error instanceof Error
                 ? error.message
-                : t("整理データを保存できませんでした。再試行してください"),
+                : "Could not save the channel library. Please try again",
           }));
         return false;
       }

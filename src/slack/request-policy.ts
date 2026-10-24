@@ -1,5 +1,4 @@
 import { SlackApiError, type ApiMethod, type ApiOptions } from "./slack-api.ts";
-import { t } from "../shared/i18n.ts";
 import {
   createMemoryPolicyStore,
   type RequestPolicyStore,
@@ -19,7 +18,7 @@ const sleep = (ms: number, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
     const abort = () => {
       clearTimeout(timer);
-      reject(new SlackApiError("aborted", t("通信を中断しました")));
+      reject(new SlackApiError("aborted", "Request cancelled"));
     };
     const timer = setTimeout(() => {
       signal?.removeEventListener("abort", abort);
@@ -51,7 +50,7 @@ export function createRequestPolicy(config: PolicyConfig): RequestPolicy {
         const deadline =
           options.deadlineAt ?? started + (options.timeoutMs ?? 30000);
         if (options.signal?.aborted)
-          throw new SlackApiError("aborted", t("通信を中断しました"));
+          throw new SlackApiError("aborted", "Request cancelled");
         let retryAt = now() + 20,
           paused = false,
           sent = false;
@@ -79,8 +78,8 @@ export function createRequestPolicy(config: PolicyConfig): RequestPolicy {
           const error = new SlackApiError(
             paused ? "rate_limited" : "deferred",
             paused
-              ? t("Slack APIの回数制限です")
-              : t("Slack APIの取得を延期しました"),
+              ? "Slack API rate limit reached"
+              : "Slack API request is waiting",
             seconds,
           );
           error.retryAt = retryAt;

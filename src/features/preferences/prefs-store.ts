@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 // 設定ファイル（Hub の prefs.json）の読み込みと保存。
 // @raycast/api を読み込まないので、node のテストから、一時フォルダを置き場にして動かせる（prefs.ts が Raycast の置き場を渡す）
 import { randomUUID } from "node:crypto";
@@ -45,30 +44,21 @@ export function prefsNoticeToast(notice: PrefsNotice): PrefsToast {
     case "unreadable":
       return {
         key: `unreadable:${notice.reason}`,
-        title: t("設定ファイルを読めませんでした"),
-        message: t(
-          "この回は空の設定で動き、変更は保存しません（{0}）",
-          notice.reason,
-        ),
+        title: "Could not read the preferences file",
+        message: `Using empty preferences for this session; changes will not be saved (${notice.reason})`,
       };
     case "broken-restarted":
       // トーストは短くするので、退避先はファイル名だけ出す（置き場は拡張の保存フォルダ）
       return {
         key: `broken-restarted:${notice.backup}`,
-        title: t("設定ファイルが壊れていました"),
-        message: t(
-          "{0} に退避して、空の設定で始めました",
-          basename(notice.backup),
-        ),
+        title: "The preferences file was corrupted",
+        message: `Backed up to ${basename(notice.backup)} and started with empty preferences`,
       };
     case "broken-kept":
       return {
         key: `broken-kept:${notice.reason}`,
-        title: t("設定ファイルが壊れています"),
-        message: t(
-          "退避できなかったので、この回は空の設定で動き、変更は保存しません（{0}）",
-          notice.reason,
-        ),
+        title: "The preferences file is corrupted",
+        message: `Could not create a backup. Using empty preferences without saving changes (${notice.reason})`,
       };
   }
 }
@@ -131,10 +121,7 @@ export function createPrefsStore(
       // この回は空の設定で動く。そのファイルは上書きしない
       keepFile = true;
       warn(
-        t(
-          "prefs.json を読めませんでした（{0}）。この回は空の設定で動き、保存しません",
-          reason(error),
-        ),
+        `Could not read prefs.json (${reason(error)}). Using empty preferences without saving changes`,
       );
       notify?.({ kind: "unreadable", reason: reason(error) });
       return emptyPrefs();
@@ -159,10 +146,7 @@ export function createPrefsStore(
         // 退避できなかったので、上書きすると、壊れた中身（直せば読めるかもしれない）が残らない
         keepFile = true;
         warn(
-          t(
-            "prefs.json が壊れていますが、退避できませんでした（{0}）。この回は空の設定で動き、保存しません",
-            reason(error),
-          ),
+          `prefs.json is corrupted and could not be backed up (${reason(error)}). Using empty preferences without saving changes`,
         );
         notify?.({ kind: "broken-kept", reason: reason(error) });
         return emptyPrefs();
@@ -172,10 +156,7 @@ export function createPrefsStore(
     const prefs = emptyPrefs();
     save(prefs);
     warn(
-      t(
-        "prefs.json が壊れていたので、{0} に退避して、空の設定で始めました",
-        backup,
-      ),
+      `prefs.json was corrupted. Backed up to ${backup} and started with empty preferences`,
     );
     notify?.({ kind: "broken-restarted", backup });
     return prefs;

@@ -112,7 +112,7 @@ test("フォームの宛先の表示は、チャンネルが #名前、人が @�
   assert.equal(destinationLabel({ kind: "person", title: "田中" }), "@田中");
   assert.equal(
     destinationLabel({ kind: "group", title: "佐藤, 山田" }),
-    "佐藤, 山田（グループDM）",
+    "佐藤, 山田 (group DM)",
   );
 });
 
@@ -189,7 +189,7 @@ test("フォームに出す親メッセージの説明は、送信者・時刻�
   );
   assert.equal(
     replyParentText({ sender: "bot", time: "15:30", body: "" }),
-    "bot · 15:30\n（本文なし）",
+    "bot · 15:30\n(No message body)",
   );
 });
 
@@ -201,17 +201,17 @@ test("返信フォームの親メッセージの欄の見出し：親の行は�
   };
   const reply = { ts: "1759560300.000300", threadTs: "1759560000.000100" };
   // threadTs が無い：スレッドになっていない投稿。欄に出るのが親そのもの
-  assert.equal(replyParentTitle(parent), "返信先");
+  assert.equal(replyParentTitle(parent), "Replying to");
   // threadTs が ts と同じ：返信が付いているスレッドの親そのもの
-  assert.equal(replyParentTitle(parentWithReplies), "返信先");
+  assert.equal(replyParentTitle(parentWithReplies), "Replying to");
   // threadTs が ts と違う：スレッド内の返信。欄に出るのは選んだ返信で、親ではない
-  assert.equal(replyParentTitle(reply), "スレッド内の返信");
+  assert.equal(replyParentTitle(reply), "Thread replies");
 
   // 送る先（-t に渡す親）が、欄に出ているメッセージと違うときだけ、見出しを変える
   for (const hit of [parent, parentWithReplies, reply]) {
     const { threadTs } = replyTargetOf({ channelId: "C1", ...hit });
     assert.equal(
-      replyParentTitle(hit) === "スレッド内の返信",
+      replyParentTitle(hit) === "Thread replies",
       threadTs !== hit.ts,
     );
   }
@@ -232,8 +232,10 @@ test("未確認のとき、返信は親の位置を開く。リンクは message
   );
   assert.ok(!reply.link.includes("thread_ts"));
   assert.equal(reply.openTitle, "Open Parent Message");
-  assert.ok(reply.resendMessage.includes("スレッドの親"));
-  assert.ok(reply.resendMessage.includes("返信が付いたか"));
+  assert.equal(
+    reply.resendMessage,
+    "Delivery of the previous reply is unknown. Sending again may create a duplicate. Open the parent message first to check whether your reply arrived.",
+  );
   // 返信を宛先の会話（チャンネル）に開いても、確かめられない。チャンネルのリンクにはならない
   assert.notEqual(
     reply.link,
@@ -269,7 +271,7 @@ test("未確認のとき、返信でない送信は宛先の会話・人を開�
   assert.equal(conversation.openTitle, "Open Conversation");
   assert.equal(
     conversation.resendMessage,
-    "前回は、届いたかどうかが分かっていません。届いていた場合は、同じ投稿が二重になります。先に宛先の会話を開いて、確かめてください。",
+    "Delivery of the previous message is unknown. Sending again may create a duplicate. Open the destination conversation first to check whether it arrived.",
   );
 
   const person = confirmationOf(TEAM, { kind: "person", id: "U1" });

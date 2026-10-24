@@ -46,5 +46,5 @@ export function mentionLabel(person: Person): string {
     person.realName !== person.displayName
       ? `${person.realName} @${person.handle}`
       : `@${person.handle}`;
-  return `${person.displayName}（${names}）`;
+  return `${person.displayName} (${names})`;
 }

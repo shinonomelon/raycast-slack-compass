@@ -1,33 +1,30 @@
-# 検索範囲を選ぶ
+# Choosing a search scope
 
-[詳しい使い方へ戻る](usage.md)
+[Back to usage](usage.md)
 
-通常のメッセージ検索と返信待ちを、お気に入り・セクション・チャンネル・投稿者で絞れます。セクションはSlack Hub内の整理設定です。Slackのサイドバーのセクションとは同期しません。
+You can narrow message search by favorites, sections, channels, and sender. Sections are a way to organize channels inside Slack Compass. They do not sync with the sections in the Slack sidebar.
 
-## 使い方
+## How to search
 
-- お気に入りのチャンネルから探す: Slack Hubを開く → Actionsの「検索条件を選ぶ」 → 範囲で「お気に入りチャンネル」 → 「メッセージを表示」。人やグループDMのお気に入りは対象外です。
-- セクションから探す: 「検索条件を選ぶ」 → 範囲で「セクション」 → セクションを選ぶ → 「メッセージを表示」。検索欄へ語句を追加して絞れます。
-- 1つのチャンネルから探す: チャンネル行のActions → 「このチャンネルでメッセージを検索」。条件画面でチャンネルを指定する方法もあります。
-- ある人の投稿を探す: 「検索条件を選ぶ」 → 投稿者を選ぶ → 「メッセージを表示」。範囲も指定すると、その範囲内のその人の投稿だけを探します。
-- 絞った範囲の返信待ちを探す: Hubで条件を適用 → 右上の表示切替で「返信待ち」。返信待ちのActionsからも条件を変えられます。
-- 条件を解除する: 「検索条件を選ぶ」 → 「条件をクリアして適用」。結果が0件でもActionsから操作できます。
+- **Search your favorite channels:** Open Search Slack → Actions → Choose Search Filters → set Search Scope to Favorite Channels → Show Messages. Favorite people and group DMs are not included.
+- **Search a section:** Choose Search Filters → set Search Scope to Section → select a section → Show Messages. Add terms in the search bar to narrow the results.
+- **Search one channel:** On a channel row, choose Search Messages in This Channel in Actions. You can also select the channel in Choose Search Filters.
+- **Search one person's posts:** Choose Search Filters → select a Sender → Show Messages. If you also set a scope, Slack Compass searches only that person's posts in that scope.
+- **Clear the filters:** Choose Search Filters → Clear Filters and Apply. You can still use Actions when there are no results.
 
-「適用」は条件を反映して元の画面へ戻ります。「メッセージを表示」は通常検索の結果も表示します。選んでいる間は選択した条件の検索を始めません。
+Apply saves the filters and returns to the previous screen. Show Messages also shows the regular search results. Slack Compass does not start a search with the filters while you are still choosing them.
 
-## セクションを管理する
+## Manage sections
 
-1. 「検索条件を選ぶ」 → Actionsの「セクションを管理」 → 「セクションを作成」。名前を入力して保存します。
-2. 管理画面でセクションを選び、チャンネルを編集して保存します。1つのチャンネルを複数のセクションに入れられます。
-3. チャンネル行のActionsからも「セクションへの所属」で所属を編集できます。
-4. 管理画面のActionsで名前変更・削除ができます。削除は確認後に実行します。
+1. Choose Search Filters → Actions → Manage Sections → Create Section. Enter a name and save.
+2. In Manage Sections, select a section, choose Edit Channels, and save. A channel can belong to more than one section.
+3. You can also edit memberships from a channel row: choose Section Membership in Actions.
+4. In Manage Sections, use Actions to Rename or Delete Section. Slack Compass asks you to confirm before it deletes.
 
-お気に入りと所属は別々に保存します。お気に入りを外してもセクション所属は消えません。同じSlackアカウントで開き直すと復元します。別アカウントの設定は混ぜません。
+Favorites and section memberships are saved separately. Removing a favorite does not remove the channel from its sections. Slack Compass restores them when you reopen it with the same Slack account. It does not mix in settings from another account.
 
-## 検索条件と取得上限
+## Filters and fetch limits
 
-手入力の`in:`・`from:`と選択条件は両方を満たす投稿を探します。条件が重ならない場合は0件です。選択条件と併用できない式は競合を表示します。空のセクションや削除したセクションから全体検索へ勝手に戻ることはありません。
+A typed `in:` or `from:` and a selected filter must both match, so a post has to satisfy both. If they do not overlap, you get no results. Slack Compass shows a conflict for expressions that cannot be combined with a selected filter. It never falls back to searching everything when a section is empty or deleted.
 
-通常検索は各検索を最大2ページ、全体で最大400件まで保存します。「続きを取得」で未処理の検索を進められます。上限や一部失敗は一覧に表示し、「取得状況」で制約を確認できます。取得済み結果の新しい順で、全範囲の最新400件を保証するものではありません。新着や編集でページ境界が動き、一部の投稿を取得できない場合があります。
-
-返信待ちは範囲・投稿者・期間ごとに5分間キャッシュします。「続きを確認」で残りを進め、⌘Rで先頭から取り直します。参照できなくなったチャンネルは警告を表示します。回数制限の待機時間は条件を変更しても解除しません。
+Regular search fetches up to 2 pages per search and stores up to 400 results in total. Choose Continue Search to continue searches that are not finished. The list shows limits and partial failures, and Fetch Status explains the constraints. The results are the newest of what was fetched, so they are not guaranteed to be the newest 400 across the whole scope. New posts or edits can move page boundaries, so some posts may be missed.

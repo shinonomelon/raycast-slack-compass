@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import { randomUUID } from "node:crypto";
 import type { Conversation } from "../../shared/types.ts";
 export type LibraryIdentity = {
@@ -57,7 +56,7 @@ export function libraryKey(identity: LibraryIdentity): string {
     !/^T[A-Z0-9]+$/.test(identity.teamId) ||
     !/^[UW][A-Z0-9]+$/.test(identity.userId)
   )
-    throw new Error(t("アカウント識別情報が不正です"));
+    throw new Error("Invalid account identity");
   return `${identity.teamId}-${identity.userId}`;
 }
 export function emptyLibrary(identity: LibraryIdentity): ChannelLibrary {
@@ -66,12 +65,12 @@ export function emptyLibrary(identity: LibraryIdentity): ChannelLibrary {
 }
 function channels(value: unknown): string[] {
   if (!Array.isArray(value) || !value.every(channelId))
-    throw new Error(t("チャンネルIDの保存データが不正です"));
+    throw new Error("Invalid saved channel IDs");
   return [...new Set(value)];
 }
 function sectionName(value: unknown): string {
   if (typeof value !== "string" || !value.trim() || value.trim().length > 100)
-    throw new Error(t("セクション名は1〜100文字で入力してください"));
+    throw new Error("Enter a section name between 1 and 100 characters");
   return value.trim();
 }
 export function parseLibraryDocument(raw: unknown): LibraryDocument {
@@ -82,7 +81,7 @@ export function parseLibraryDocument(raw: unknown): LibraryDocument {
     !record(raw.legacyClaims)
   )
     throw new Error(
-      t("整理ファイルが壊れています。復旧してから再読み込みしてください"),
+      "The channel library file is corrupted. Restore it before reloading",
     );
   const accounts: Record<string, ChannelLibrary> = {};
   for (const [key, value] of Object.entries(raw.accounts)) {
@@ -93,10 +92,10 @@ export function parseLibraryDocument(raw: unknown): LibraryDocument {
       typeof value.userId !== "string" ||
       !Array.isArray(value.sections)
     )
-      throw new Error(t("アカウントの保存データが不正です"));
+      throw new Error("Invalid saved account data");
     const identity = { teamId: value.teamId, userId: value.userId };
     if (libraryKey(identity) !== key)
-      throw new Error(t("保存先アカウントが一致しません"));
+      throw new Error("The destination account does not match");
     const ids = new Set<string>();
     const names = new Set<string>();
     const sections = value.sections.map((section) => {
@@ -106,10 +105,10 @@ export function parseLibraryDocument(raw: unknown): LibraryDocument {
         !/^[A-Za-z0-9-]{1,100}$/.test(section.id) ||
         ids.has(section.id)
       )
-        throw new Error(t("セクションIDの保存データが不正です"));
+        throw new Error("Invalid saved section IDs");
       const name = sectionName(section.name);
       if (names.has(name))
-        throw new Error(t("同名のセクションが保存されています"));
+        throw new Error("Duplicate section names in saved data");
       ids.add(section.id);
       names.add(name);
       return { id: section.id, name, channelIds: channels(section.channelIds) };
@@ -128,7 +127,7 @@ export function parseLibraryDocument(raw: unknown): LibraryDocument {
       typeof owner !== "string" ||
       !Object.hasOwn(accounts, owner)
     )
-      throw new Error(t("旧お気に入りの取り込み記録が不正です"));
+      throw new Error("Invalid legacy favorites migration record");
     legacyClaims[id] = owner;
   }
   return { version: 1, accounts, legacyClaims };
@@ -167,15 +166,13 @@ export function applyLibraryMutation(
   const find = (id: string) => {
     const section = next.sections.find((s) => s.id === id);
     if (!section)
-      throw new Error(
-        t("セクションが削除されています。再読み込みしてください"),
-      );
+      throw new Error("This section was deleted. Reload the library");
     return section;
   };
   const named = (name: string, except?: string) => {
     const normalized = sectionName(name);
     if (next.sections.some((s) => s.id !== except && s.name === normalized))
-      throw new Error(t("同じ名前のセクションがあります"));
+      throw new Error("A section with this name already exists");
     return normalized;
   };
   switch (mutation.kind) {

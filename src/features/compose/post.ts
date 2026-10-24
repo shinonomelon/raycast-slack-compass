@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 // 本文はメモリ内で変換し、公式APIへ渡す。一時ファイルも外部プロセスも使わない。
 import {
   classifySendError,
@@ -30,7 +29,7 @@ export async function postMarkdown(params: {
   )
     return {
       kind: "failed",
-      message: t("宛先と本文を確認してください"),
+      message: "Check the destination and message",
     };
   let blocks: ReturnType<typeof toBlocks>;
   let text: string;
@@ -44,7 +43,7 @@ export async function postMarkdown(params: {
       return { kind: "failed", message: error.message };
     return {
       kind: "failed",
-      message: t("本文を変換できませんでした"),
+      message: "Could not convert the message",
     };
   }
   const started = Date.now();
@@ -65,22 +64,17 @@ export async function postMarkdown(params: {
       if (typeof id !== "string" || !/^D[A-Z0-9]+$/.test(id))
         return {
           kind: "failed",
-          message: t(
-            "DMの会話IDを取得できませんでした。投稿は送信していません",
-          ),
+          message: "Could not get the DM conversation ID. Nothing was sent",
         };
       channel = id;
     } catch (error) {
       const reason =
         error instanceof SlackApiError
           ? error.message
-          : t("トークンとim:write権限を確認してください");
+          : "Check your token and im:write permission";
       return {
         kind: "failed",
-        message: t(
-          "DMを開けませんでした（{0}）。投稿は送信していません",
-          reason,
-        ),
+        message: `Could not open the DM (${reason}). Nothing was sent`,
       };
     }
   }
@@ -89,7 +83,7 @@ export async function postMarkdown(params: {
     if (remaining <= 0)
       return {
         kind: "failed",
-        message: t("DMの取得が時間切れになりました。投稿は送信していません"),
+        message: "DM request timed out. Nothing was sent",
       };
     // 再試行も画面を閉じたことによる中断も行わず、二重投稿を防ぐ。
     const data = await params.api(

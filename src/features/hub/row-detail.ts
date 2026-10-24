@@ -1,4 +1,3 @@
-import { t } from "../../shared/i18n.ts";
 import type { Row } from "../../slack/items.ts";
 import type { Person } from "../../shared/types.ts";
 // 取得済みの値を本文として表示する。改行とMarkdown記号で別の見出し・リンクを作らせない。
@@ -9,30 +8,30 @@ export function escapeDetail(value: string): string {
 }
 const kinds = {
   get channel() {
-    return t("公開チャンネル");
+    return "Public Channel";
   },
   get private() {
-    return t("非公開チャンネル");
+    return "Private Channel";
   },
   get group() {
-    return t("グループDM");
+    return "Group DM";
   },
   get person() {
-    return t("人");
+    return "Person";
   },
 };
 export function rowDetail(row: Row, person?: Person): string {
   const fields: [string, string][] = [
-    [t("種別"), kinds[row.kind]],
+    ["Type", kinds[row.kind]],
     ...(person?.handle
-      ? [[t("ハンドル"), `@${person.handle}`] as [string, string]]
+      ? [["Handle", `@${person.handle}`] as [string, string]]
       : []),
     ...(person?.realName
-      ? [[t("実名"), person.realName] as [string, string]]
+      ? [["Real Name", person.realName] as [string, string]]
       : []),
-    ...(person?.title ? [[t("役職"), person.title] as [string, string]] : []),
+    ...(person?.title ? [["Job Title", person.title] as [string, string]] : []),
     ...(row.aliases.length
-      ? [[t("別名"), row.aliases.join("・")] as [string, string]]
+      ? [["Aliases", row.aliases.join(", ")] as [string, string]]
       : []),
     ["ID", row.id],
   ];

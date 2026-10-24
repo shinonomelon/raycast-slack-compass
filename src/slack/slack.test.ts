@@ -118,7 +118,7 @@ test("一覧の途中で失敗した時は部分結果を返さず、カーソ�
     channels: [],
     response_metadata: { next_cursor: "same" },
   }));
-  await assert.rejects(listConversations(cycle.api), /カーソル/);
+  await assert.rejects(listConversations(cycle.api), /repeated cursor/);
   assert.equal(cycle.calls.length, 2);
 });
 test("名前のない会話を補完し、制御文字・不正なユーザーを画面へ渡さない", async () => {

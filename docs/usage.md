@@ -79,6 +79,8 @@ Typing in a list filters the data already loaded and supports fuzzy matching. Ev
 | Show Details / Hide Details                    | Shows or hides the full text in the sidebar. Reading does not mark it opened |
 | Open in Slack                                  | Opens the message in Slack                                                   |
 | Reply in Thread                                | Replies in the thread                                                        |
+| Add Reaction…                                  | Opens a searchable emoji list. Choose an emoji to add it as your reaction    |
+| Remove My Reaction…                            | Lists only your own reactions on the message. Choose one to remove it        |
 | Mark as Handled / Unmark as Handled            | Adds or removes the "handled" mark                                           |
 | Filter by This Conversation / Filter by Sender | Filters by the conversation or sender                                        |
 | Open Permalink in Browser                      | Opens the message link in your browser                                       |
@@ -87,6 +89,31 @@ Typing in a list filters the data already loaded and supports fuzzy matching. Ev
 Rows marked as opened or handled leave your Mentions & DMs list the next time you open Search Slack. Marks expire after 14 days. A row also gets the "opened" mark after your reply is sent.
 
 In saved Mentions & DMs results, long text is a preview of the first 300 characters. Reload Search (⌘R) fetches the full text. Regular message search shows the full text.
+
+### Add or remove a reaction
+
+Add Reaction… and Remove My Reaction… appear on every message row: search results, Mentions & DMs, and messages in a channel. They need the optional `reactions:write` scope, and Remove My Reaction… also needs `reactions:read`. See [Required API scopes](reference.md#required-api-scopes).
+
+1. Select a message and choose Add Reaction… (⌘⇧E). Type part of an emoji name or a keyword such as `thanks`, then choose Add Reaction. The list has standard emoji only. Workspace custom emoji are not listed.
+2. To take back your own reaction, choose Remove My Reaction…. Slack Compass asks Slack which reactions you added to that message and lists only those. You cannot remove other people's reactions.
+3. On success, a toast confirms the change and the picker closes, so you are back on the message list.
+
+Slack Compass tells these cases apart:
+
+- **Missing permission** (`missing_scope`, `not_allowed_token_type`): add `reactions:read` and `reactions:write` to User Token Scopes, reinstall the app, and update the token in Raycast if it changed.
+- **Token not accepted** (`invalid_auth`, `not_authed`, `token_revoked`, `token_expired`, `account_inactive`): check Slack Access Token in the extension preferences.
+- **Already added or already removed** (`already_reacted`, `no_reaction`): you already have the state you asked for, so Slack Compass reports success and says nothing changed.
+- **Message deleted or not visible** (`message_not_found`, `channel_not_found`, `not_in_channel`): nothing was changed.
+- **Reactions not allowed on this message** (`not_reactable`, `thread_locked`, `is_archived`, `no_permission`, and similar): nothing was changed.
+- **Emoji not recognized** (`invalid_name`): Slack does not know the emoji name. Nothing was changed.
+- **Reaction limit reached** (`too_many_emoji`, `too_many_reactions`): the message already has the maximum number of reactions. Nothing was changed.
+- **Rate limited**: Slack Compass shows when you can retry. Nothing was changed.
+- **Other errors returned by Slack**: Slack Compass shows the error code. Nothing was changed.
+- **Delivery not confirmed** (timeout, connection error, HTTP error, unreadable response, or a temporary Slack error such as `internal_error` or `service_unavailable`): Slack Compass does not send the request again. The toast says the reaction may or may not have been added or removed. Choose Open in Slack and check the message before you try again. The picker then offers only Open in Slack.
+
+When Slack Compass lists your reactions for Remove My Reaction…, it also tells you when the list may be incomplete, or when some of your reactions have names it cannot remove. Remove those in Slack.
+
+Adding or removing a reaction does not mark the message as opened or handled, and does not remove a mark.
 
 ### Reload, swap, and post
 
@@ -111,6 +138,7 @@ These keys are defined by the extension, and you can pick the same actions from 
 | ⌘⇧R       | Reload Conversations and People                  |
 | ⌘⇧D       | Mark or unmark as handled                        |
 | ⌘⇧Return  | Reply in Thread                                  |
+| ⌘⇧E       | Add Reaction…                                    |
 | ⌘D        | Edit Dictionary                                  |
 | ⌘⇧P       | Preview the post                                 |
 | Control+X | Delete a dictionary rule                         |
@@ -119,4 +147,4 @@ Write messages in Markdown. Choose mentions in the separate Mention field, not i
 
 ## Not supported
 
-Drafts, history before or after a message outside its thread, reactions, bookmarks, and Lists are not available. Full-text results, posting, thread replies, and handling messages addressed to you still work. To follow these features, see [GitHub Issues](https://github.com/shinonomelon/raycast-slack-hub/issues).
+Drafts, history before or after a message outside its thread, bookmarks, and Lists are not available. Reactions cover standard emoji only. Full-text results, posting, thread replies, reactions, and handling messages addressed to you work. To follow these features, see [GitHub Issues](https://github.com/shinonomelon/raycast-slack-hub/issues).

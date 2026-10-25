@@ -19,8 +19,11 @@ A scope is a permission you give your Slack app. Each API that Slack Compass cal
 | Post, reply in a thread                        | `chat.postMessage`      | `chat:write`                                                                                      |
 | Earlier thread messages in details             | `conversations.replies` | `channels:history`, `groups:history`, `im:history`, `mpim:history` (depends on conversation type) |
 | Start a DM with a person                       | `conversations.open`    | `im:write`                                                                                        |
+| List your reactions on a message               | `reactions.get`         | `reactions:read` (optional)                                                                       |
+| Add your reaction                              | `reactions.add`         | `reactions:write` (optional)                                                                      |
+| Remove your reaction                           | `reactions.remove`      | `reactions:write` (optional)                                                                      |
 
-Regular message search does not need the history scopes. Add them only if you want to read earlier thread messages in details.
+Regular message search does not need the history scopes. Add them only if you want to read earlier thread messages in details. The reaction scopes are also optional: skip them if you do not use Add Reaction… and Remove My Reaction….
 
 After you add a scope, reinstall the app. If the token changes, update it in Raycast settings too. Slack Compass does not fetch email addresses, so `users:read.email` is not needed.
 
@@ -74,7 +77,7 @@ A run that does not need to refresh makes no Slack calls. If a list fetch stops 
 
 ## Rate limits
 
-Slack Compass spaces out requests for each API. After a 429 response, it pauses that API in both the UI and background refresh until `Retry-After`. Other APIs that are not paused keep working. While it waits, it shows saved results and does not treat candidates it has not fetched as checked. It does not retry posts automatically.
+Slack Compass spaces out requests for each API. After a 429 response, it pauses that API in both the UI and background refresh until `Retry-After`. Other APIs that are not paused keep working. While it waits, it shows saved results and does not treat candidates it has not fetched as checked. It does not retry posts or reactions automatically.
 
 By default, history and thread fetches are limited to one request per minute each. If you confirm that your Slack app is internal to your workspace or approved for the Slack Marketplace, you can choose **Verified Internal or Marketplace (1.3 Seconds)** under **Slack API Distribution**. Listing in the Raycast Store does not change this status. See [Slack's documentation](https://docs.slack.dev/reference/methods/conversations.replies/).
 
@@ -82,7 +85,7 @@ By default, history and thread fetches are limited to one request per minute eac
 
 - **No token or authentication failed:** Enter your User OAuth Token in Slack Access Token and open Search Slack again. For `invalid_auth`, `not_authed`, `token_revoked`, `token_expired`, or `account_inactive`, check the state of the token and the account. If earlier results exist, Slack Compass shows the saved lists. It stops new fetches and posting until authentication succeeds.
 - **`missing_scope`:** Add the scope shown to User Token Scopes and reinstall the app. If the token changes, update it in Raycast settings too.
-- **Rate limit or search timeout:** After the wait period shown, choose Reload Search in Actions. For a 429 response, Slack Compass uses Retry-After and stops calls to that API method. It does not retry posts automatically.
+- **Rate limit or search timeout:** After the wait period shown, choose Reload Search in Actions. For a 429 response, Slack Compass uses Retry-After and stops calls to that API method. It does not retry posts or reactions automatically.
 - **"Delivery has not been confirmed":** The post may have arrived. Use Open Conversation or Open Parent Message in the toast to open Slack and check. Sending again can post the same message twice.
 - **Unknown read position:** A conversation whose Slack response has no `last_read` is treated as unknown. A failed fetch is never shown as zero unread.
 
@@ -94,4 +97,4 @@ See [Development](../README.md#development) in the README for tests, builds, and
 
 ## Data from earlier versions
 
-The code for Slack drafts, history and reaction screens that were waiting for verification, bookmarks, and Lists has been removed. Slack Compass does not delete existing files such as `drafts.json` and does not read them. If you delete the whole saved-data folder, you also lose your favorites and handled marks.
+The code for Slack drafts, history screens that were waiting for verification, bookmarks, and Lists has been removed. Slack Compass does not delete existing files such as `drafts.json` and does not read them. If you delete the whole saved-data folder, you also lose your favorites and handled marks.

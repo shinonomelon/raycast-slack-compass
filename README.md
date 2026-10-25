@@ -1,6 +1,6 @@
 # Slack Compass
 
-Slack Compass finds Slack channels, people, and group DMs from Raycast. It also searches messages, posts messages, and replies in threads. It connects directly to the official Slack Web API and does not need slack-cli.
+Slack Compass finds Slack channels, people, and group DMs from Raycast. It also searches messages, posts messages, replies in threads, and adds or removes your reactions. It connects directly to the official Slack Web API and does not need slack-cli.
 
 Search supports fuzzy name matching, favorites, sections, filtering by sender, aliases, a triage list for mentions and DMs, and lookups of which channels a person has joined or who is in a channel.
 
@@ -27,6 +27,13 @@ Search supports fuzzy name matching, favorites, sections, filtering by sender, a
    search:read
    chat:write
    im:write
+   ```
+
+   To add or remove reactions, also add these two optional scopes. If you do not use reactions, you do not need them:
+
+   ```text
+   reactions:read
+   reactions:write
    ```
 
 3. Click **Install to Workspace**, then copy the **User OAuth Token** (`xoxp-`). Workspaces that require app approval need an admin to approve the app first. Bot tokens (`xoxb-`) do not work.
@@ -60,6 +67,8 @@ Return opens the selected item in Slack. ⌘Return shows or hides details. ⌘N 
 | Read a message                   | Type a search term or `in:#channel-name`, select a result, press ⌘Return                                                           |
 | Post a message or send a DM      | Select a conversation or person, choose Write, write the message, choose Post and Open in Slack                                    |
 | Reply in a thread                | Select a message, choose Reply in Thread, write the reply, choose Post and Open in Slack                                           |
+| Add a reaction                   | Select a message, choose Add Reaction…, pick an emoji (⌘⇧E opens the picker)                                                       |
+| Remove your reaction             | Select a message, choose Remove My Reaction…, pick one of your reactions                                                           |
 | Triage messages addressed to you | Clear the search bar, select an item under Mentions & DMs, choose Mark as Handled                                                  |
 | Find channels a person is in     | Select a person, choose View Channels with This Person. Choose Add Person to narrow the list to channels all selected people share |
 | See who is in a channel          | Select a channel, choose View Members                                                                                              |
@@ -108,4 +117,4 @@ Do not put tokens or real Slack messages in tests, logs, or issues.
 
 ## Known limitations
 
-Slack Compass does not support drafts, history around a message outside its thread, reactions, channel bookmarks, or Slack Lists. Track these features in [GitHub Issues](https://github.com/shinonomelon/raycast-slack-hub/issues).
+Slack Compass does not support drafts, history around a message outside its thread, channel bookmarks, or Slack Lists. Reactions cover standard emoji only: you cannot pick a workspace custom emoji or remove someone else's reaction. Track these features in [GitHub Issues](https://github.com/shinonomelon/raycast-slack-hub/issues).

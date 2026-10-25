@@ -9,10 +9,15 @@ import {
 import { messageLink, type Hit } from "../../slack/hits.ts";
 import type { Session } from "../../slack/identity.ts";
 import { toPlain } from "../../slack/mrkdwn.ts";
+import {
+  AddReactionList,
+  RemoveReactionList,
+} from "../reactions/reaction-screens.tsx";
 import { messageDetailMarkdown } from "./message-detail.ts";
 import type { ThreadDetail } from "./use-thread-context.ts";
 import type { Names } from "../../slack/names.ts";
 import {
+  ADD_REACTION_SHORTCUT,
   DETAILS_SHORTCUT,
   FILTER_SHORTCUT,
   FILTER_SHORTCUT_ALT,
@@ -199,6 +204,18 @@ export function MessageRow({
               }
             />
           ) : null}
+          {/* リアクションの画面には triage の関数を渡さない。付けても外しても「開いた」「対応済み」の印は変わらない */}
+          <Action.Push
+            title="Add Reaction…"
+            icon={Icon.Emoji}
+            shortcut={ADD_REACTION_SHORTCUT}
+            target={<AddReactionList session={session} hit={hit} />}
+          />
+          <Action.Push
+            title="Remove My Reaction…"
+            icon={Icon.XMarkCircle}
+            target={<RemoveReactionList session={session} hit={hit} />}
+          />
           <Action
             title={marked ? "Unmark as Handled" : "Mark as Handled"}
             icon={marked ? Icon.Circle : Icon.CheckCircle}

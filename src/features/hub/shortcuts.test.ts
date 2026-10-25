@@ -44,3 +44,9 @@ test("詳細は2番目の自動キーと一致し、Writeは自動Returnキー�
     keyOf(shortcuts.DETAILS_SHORTCUT),
   );
 });
+
+test("リアクションを付けるのは ⌘⇧E。ほかの操作と重ならない", () => {
+  assert.equal(keyOf(shortcuts.ADD_REACTION_SHORTCUT), "cmd+shift+e");
+  // 重複の検査（上のテスト）に入っていることを確かめる
+  assert.ok(Object.keys(shortcuts).includes("ADD_REACTION_SHORTCUT"));
+});

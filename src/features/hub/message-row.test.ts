@@ -38,6 +38,10 @@ function render(opened: boolean, withContext: boolean) {
     "../../slack/mrkdwn.ts": mrkdwn,
     "./message-detail.ts": detail,
     "./shortcuts.ts": shortcuts,
+    "../reactions/reaction-screens.tsx": {
+      AddReactionList: "add-reaction",
+      RemoveReactionList: "remove-reaction",
+    },
     "../membership/person-channels.tsx": {},
     "../membership/channel-members.tsx": {},
   };
@@ -162,5 +166,58 @@ test("追加取得・詳細更新は専用操作へ進み、返信は取得し�
     String(ui.actions[0].props.target).includes(
       "message=3.000000&thread_ts=1.000000",
     ),
+  );
+});
+
+test("Add Reaction… と Remove My Reaction… が出て、押すと選択画面へ進む。付け外しの専用キーは ⌘⇧E だけ", () => {
+  for (const [opened, context] of [
+    [false, false],
+    [true, true],
+  ]) {
+    const ui = render(opened, context);
+    const titles = ui.actions.map((action) => action.props.title);
+    const add = ui.actions.find(
+      (action) => action.props.title === "Add Reaction…",
+    )!;
+    const remove = ui.actions.find(
+      (action) => action.props.title === "Remove My Reaction…",
+    )!;
+    assert.ok(add && remove, String(titles));
+    assert.equal(add.type, "push");
+    assert.equal(remove.type, "push");
+    assert.deepEqual(add.props.shortcut, shortcuts.ADD_REACTION_SHORTCUT);
+    assert.equal(remove.props.shortcut, undefined);
+    // 先頭の2つ（Slack で開く・詳細の出し入れ）の並びは変わらない
+    assert.equal(titles[0], "Open in Slack");
+    assert.equal(titles.indexOf("Add Reaction…") > 1, true);
+    const addTarget = add.props.target as Node;
+    const removeTarget = remove.props.target as Node;
+    assert.equal(addTarget.type, "add-reaction");
+    assert.equal(removeTarget.type, "remove-reaction");
+    for (const node of [addTarget, removeTarget]) {
+      const props = node.props as { hit: hits.Hit; session: object };
+      assert.equal(props.hit.channelId, "C1");
+      assert.equal(props.hit.ts, "3.000000");
+    }
+  }
+});
+
+test("リアクションの操作は、開いた・返信した・対応済みの印に触れない", () => {
+  const ui = render(false, false);
+  for (const title of ["Add Reaction…", "Remove My Reaction…"]) {
+    const action = ui.actions.find((item) => item.props.title === title)!;
+    // 画面へ渡すのは session と hit だけ。印を付け外しする関数を渡さない
+    const props = (action.props.target as Node).props;
+    assert.deepEqual(Object.keys(props).sort(), ["hit", "session"]);
+    assert.equal(action.props.onAction, undefined);
+    assert.equal(action.props.onOpen, undefined);
+  }
+  assert.deepEqual(
+    {
+      opened: ui.marks.opened,
+      replied: ui.marks.replied,
+      toggled: ui.marks.toggled,
+    },
+    { opened: 0, replied: 0, toggled: 0 },
   );
 });

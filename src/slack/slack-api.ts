@@ -15,7 +15,10 @@ export type ApiMethod =
   | "conversations.replies"
   | "conversations.info"
   | "conversations.open"
-  | "chat.postMessage";
+  | "chat.postMessage"
+  | "reactions.get"
+  | "reactions.add"
+  | "reactions.remove";
 export type ApiParams = Record<string, unknown>;
 export type ApiSource =
   | "background"
@@ -25,6 +28,7 @@ export type ApiSource =
   | "membership"
   | "thread-context"
   | "post"
+  | "reaction"
   | "auth"
   | "unknown";
 export type ApiOptions = {
@@ -84,6 +88,9 @@ const POST_METHODS: ReadonlySet<ApiMethod> = new Set([
   "auth.test",
   "conversations.open",
   "chat.postMessage",
+  // リアクションの追加・除去は書き込みなので、本文(JSON)で送る
+  "reactions.add",
+  "reactions.remove",
 ]);
 export function createSlackApi(
   token: string,
@@ -275,7 +282,9 @@ export function createSlackApi(
     if (
       options.dedupe === false ||
       method === "chat.postMessage" ||
-      method === "conversations.open"
+      method === "conversations.open" ||
+      method === "reactions.add" ||
+      method === "reactions.remove"
     )
       return execute(method, params, options);
     const key = `${method}:${canonical(params)}:${options.timeoutMs ?? 30000}`;

@@ -10,6 +10,7 @@ const sources = new Set([
   "membership",
   "thread-context",
   "post",
+  "reaction",
   "auth",
   "unknown",
 ]);
@@ -26,6 +27,9 @@ const methods = new Set([
   "conversations.info",
   "conversations.open",
   "chat.postMessage",
+  "reactions.get",
+  "reactions.add",
+  "reactions.remove",
 ]);
 export type Metric =
   "requests" | "rateLimited" | "cacheHits" | "waitMs" | "coalesced";

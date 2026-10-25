@@ -48,3 +48,10 @@ export const WRITE_SHORTCUT: Keyboard.Shortcut = {
   modifiers: ["cmd"],
   key: "n",
 };
+
+// ⌘⇧E で、メッセージの行にリアクションを付ける絵文字の選択画面を開く。
+// 外す操作（Remove My Reaction…）は使う頻度が低いので、キーを割り当てない
+export const ADD_REACTION_SHORTCUT: Keyboard.Shortcut = {
+  modifiers: ["cmd", "shift"],
+  key: "e",
+};

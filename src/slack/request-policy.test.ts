@@ -158,6 +158,35 @@ test("診断には本文・トークン・検索式・IDを記録しない", asy
     rmSync(path, { recursive: true, force: true });
   }
 });
+test("リアクションの通信も、操作元reactionとAPI名だけで診断に記録する", async () => {
+  const path = root();
+  try {
+    const metricsPath = join(path, "metrics.json");
+    const api = createSlackApi(
+      "xoxp-secret",
+      async () => new Response(JSON.stringify({ ok: true })),
+      { metrics: createRequestMetrics(metricsPath) },
+    );
+    const params = { channel: "CSECRET", timestamp: "1.000000", name: "eyes" };
+    for (const method of [
+      "reactions.get",
+      "reactions.add",
+      "reactions.remove",
+    ] as const)
+      await api(method, params, { source: "reaction" });
+    const raw = readFileSync(metricsPath, "utf8");
+    assert.doesNotMatch(raw, /xoxp|CSECRET|eyes/);
+    const rows = JSON.parse(raw) as { source: string; method: string }[];
+    assert.deepEqual(rows.map((row) => row.method).sort(), [
+      "reactions.add",
+      "reactions.get",
+      "reactions.remove",
+    ]);
+    assert.ok(rows.every((row) => row.source === "reaction"));
+  } finally {
+    rmSync(path, { recursive: true, force: true });
+  }
+});
 test("強制終了した別プロセスのロックは期限前でも復旧する", async () => {
   const path = root();
   const lock = join(path, "killed-lock");

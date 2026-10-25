@@ -64,6 +64,51 @@ test("HTTPメソッドはauth.testとconversations.openがPOST、それ以外の
     await api(method);
   }
 });
+test("reactions.add・reactions.removeはJSONのPOST、reactions.getはGETで送る", async () => {
+  for (const method of [
+    "reactions.get",
+    "reactions.add",
+    "reactions.remove",
+  ] as ApiMethod[]) {
+    const api = createSlackApi(TOKEN, async (input, init) => {
+      const post = method !== "reactions.get";
+      assert.equal(init?.method, post ? "POST" : "GET");
+      const url = new URL(String(input));
+      assert.equal(url.pathname, `/api/${method}`);
+      // 書き込みの引数はURLに載せず、本文に入れる。読み取りはURLに載せる
+      assert.equal(url.searchParams.has("name"), !post);
+      if (post)
+        assert.deepEqual(JSON.parse(String(init?.body)), {
+          channel: "C1",
+          timestamp: "1759560123.456789",
+          name: "eyes",
+        });
+      return json({ ok: true });
+    });
+    await api(method, {
+      channel: "C1",
+      timestamp: "1759560123.456789",
+      name: "eyes",
+    });
+  }
+});
+test("同じ内容のreactions.addを同時に呼んでも通信を束ねない", async () => {
+  let calls = 0;
+  const api = createSlackApi(TOKEN, async () => {
+    calls++;
+    return json({ ok: true });
+  });
+  const params = {
+    channel: "C1",
+    timestamp: "1759560123.456789",
+    name: "eyes",
+  };
+  await Promise.all([
+    api("reactions.add", params),
+    api("reactions.add", params),
+  ]);
+  assert.equal(calls, 2);
+});
 test("Bot・空トークンはHTTP要求を送る前に拒否する", async () => {
   for (const token of ["", "xoxb-bot", "xapp-app", "invalid"]) {
     let calls = 0;

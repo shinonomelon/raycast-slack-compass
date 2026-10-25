@@ -36,7 +36,14 @@ import {
   type SearchScope,
 } from "../search-scope/model.ts";
 import { createMessageSearchPlan } from "../search-scope/search-plan.ts";
-import { hubFavorites, searchScopeTitle } from "../search-scope/hub-scope.ts";
+import {
+  hubFavorites,
+  removableFilters,
+  removeScopeFilter,
+  scopeForChannel,
+  searchScopeTitle,
+  type RemovableFilter,
+} from "../search-scope/hub-scope.ts";
 import {
   destinationLabel,
   sendTargetOf,
@@ -324,6 +331,7 @@ function Hub({
     library.library,
     conversations.data ?? [],
     people.data ?? [],
+    identity.userId,
   );
   const scopeWarning = scopeResolution.missingSection
     ? "The selected section was deleted. Choose search filters again"
@@ -390,14 +398,20 @@ function Hub({
       triage.openUnread,
     );
     const ids = scopeResolution.resolved.channelIds;
+    const dmUserId = scopeResolution.resolved.dmUserId;
     return rankItems(
-      ids === "all"
-        ? filtered
-        : filtered.filter(
-            (item) =>
-              (item.kind === "channel" || item.kind === "private") &&
-              ids.includes(item.id),
-          ),
+      dmUserId
+        ? // DM の範囲では、その人の行だけを会話の一覧に残す
+          filtered.filter(
+            (item) => item.kind === "person" && item.id === dmUserId,
+          )
+        : ids === "all"
+          ? filtered
+          : filtered.filter(
+              (item) =>
+                (item.kind === "channel" || item.kind === "private") &&
+                ids.includes(item.id),
+            ),
       conversationQuery(searchText),
     );
   }, [
@@ -607,6 +621,7 @@ function Hub({
         library={library.library}
         conversations={conversations.data ?? []}
         people={people.data ?? []}
+        selfId={identity.userId}
         onApply={(scope, options) => {
           setSearchScope(scope);
           const nextMessageMode = !!options.showMessages;
@@ -640,11 +655,57 @@ function Hub({
   const scopeAction = (
     <Action
       key="search-scope"
-      title="Choose Search Filters"
+      title="Choose Search Filters…"
       icon={Icon.Filter}
       onAction={openScope}
     />
   );
+  // 条件を1つだけ外す。検索語（searchText）は変えず、ほかの条件も残す。
+  // 条件の適用（onApply）と同じく、表示の指定を戻して先頭の行を選び直す。
+  // 条件が1つも残らないときは、「Clear Filters and Apply」と同じくメッセージ表示の指定も解く
+  const removeFilter = (filter: RemovableFilter) => {
+    const next = removeScopeFilter(searchScope, filter);
+    const nextMessageMode = removableFilters(next).length ? messageMode : false;
+    setSearchScope(next);
+    setMessageMode(nextMessageMode);
+    setOverride(undefined);
+    setRequest(
+      requestFirstRow(
+        searchText,
+        undefined,
+        candidates.length > 0,
+        nextMessageMode,
+      ),
+    );
+  };
+  // 条件があるものだけ出す。Actions の検索結果の行・会話の行・空の状態のすべてに並べる
+  const removable = removableFilters(searchScope);
+  const removeActions = [
+    removable.includes("range") ? (
+      <Action
+        key="remove-scope-filter"
+        title="Remove Scope Filter"
+        icon={Icon.XMarkCircle}
+        onAction={() => removeFilter("range")}
+      />
+    ) : null,
+    removable.includes("sender") ? (
+      <Action
+        key="remove-sender-filter"
+        title="Remove Sender Filter"
+        icon={Icon.XMarkCircle}
+        onAction={() => removeFilter("sender")}
+      />
+    ) : null,
+    removable.includes("recipient") ? (
+      <Action
+        key="remove-recipient-filter"
+        title="Remove Recipient Filter"
+        icon={Icon.XMarkCircle}
+        onAction={() => removeFilter("recipient")}
+      />
+    ) : null,
+  ];
   const continueAction = search.progress?.pendingCount ? (
     <Action
       key="continue-search"
@@ -658,6 +719,7 @@ function Hub({
   const commonActions = [
     ...actionsIn(COMMON_ACTIONS),
     scopeAction,
+    ...removeActions,
     continueAction,
   ];
   // 詳細を持たない候補・状態の行では、主操作の次に閉じる操作を置く。
@@ -736,7 +798,14 @@ function Hub({
     kind: Parameters<typeof standaloneActions>[0],
   ) => {
     const [primary, ...rest] = actionsIn(standaloneActions(kind));
-    return [primary, hideDetails, ...rest, scopeAction, continueAction];
+    return [
+      primary,
+      hideDetails,
+      ...rest,
+      scopeAction,
+      ...removeActions,
+      continueAction,
+    ];
   };
   const statusRow = searchStatusRow(
     search.status,
@@ -825,6 +894,7 @@ function Hub({
             actions={
               <ActionPanel>
                 {scopeAction}
+                {removeActions}
                 <Action
                   title="Refresh Channels and Library"
                   onAction={async () => {
@@ -1031,13 +1101,9 @@ function Hub({
                               title="Search Messages in This Channel"
                               icon={Icon.MagnifyingGlass}
                               onAction={() => {
-                                setSearchScope({
-                                  ...searchScope,
-                                  range: {
-                                    kind: "channel",
-                                    channelId: item.id,
-                                  },
-                                });
+                                setSearchScope(
+                                  scopeForChannel(searchScope, item.id),
+                                );
                                 setMessageMode(true);
                                 setSearchText("");
                                 setOverride(undefined);
@@ -1112,7 +1178,8 @@ function Hub({
           if (
             triage.rows.length === 0 ||
             searchScope.range.kind !== "all" ||
-            searchScope.senderId
+            searchScope.senderId ||
+            searchScope.recipient
           )
             return null;
           return (
@@ -1178,6 +1245,7 @@ function Hub({
                     />
                     {continueAction}
                     {scopeAction}
+                    {removeActions}
                     <Action
                       title="Reload from Beginning"
                       onAction={search.revalidate}

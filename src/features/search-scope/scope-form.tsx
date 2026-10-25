@@ -12,6 +12,8 @@ export type ScopeFormProps = {
   library: ChannelLibrary;
   conversations: readonly Conversation[];
   people: readonly Person[];
+  // 自分のユーザー ID。送信者・宛先の Me と、人の一覧から自分を除くのに使う
+  selfId: string;
   onApply: (
     scope: SearchScope,
     options: {
@@ -28,6 +30,7 @@ export function ScopeForm({
   library: initialLibrary,
   conversations,
   people,
+  selfId,
   onApply,
   onManage,
 }: ScopeFormProps) {
@@ -49,7 +52,21 @@ export function ScopeForm({
       ? scope.range.channelId
       : (channels[0]?.id ?? ""),
   );
+  // 人の選択肢。自分は Me として別に出すので、ここには含めない
+  const others = people.filter((p) => p.id !== selfId);
+  const nameOf = (p: Person) => p.displayName || p.realName || p.handle;
+  const [dmUserId, setDmUserId] = useState(
+    scope.range.kind === "dm" ? scope.range.userId : (others[0]?.id ?? ""),
+  );
   const [senderId, setSenderId] = useState(scope.senderId ?? "");
+  // 宛先の選択値。"" は指定なし、"me" は自分宛て、それ以外は人のユーザー ID
+  const [recipientValue, setRecipientValue] = useState(
+    scope.recipient?.kind === "me"
+      ? "me"
+      : scope.recipient?.kind === "person"
+        ? scope.recipient.userId
+        : "",
+  );
   const [error, setError] = useState<string>();
   const apply = (showMessages = false) => {
     const range: SearchScope["range"] =
@@ -57,13 +74,26 @@ export function ScopeForm({
         ? { kind, sectionId }
         : kind === "channel"
           ? { kind, channelId }
-          : { kind };
-    const next = { range, ...(senderId ? { senderId } : {}) };
+          : kind === "dm"
+            ? { kind, userId: dmUserId }
+            : { kind };
+    const recipient: SearchScope["recipient"] =
+      recipientValue === "me"
+        ? { kind: "me" }
+        : recipientValue
+          ? { kind: "person", userId: recipientValue }
+          : undefined;
+    const next: SearchScope = {
+      range,
+      ...(senderId ? { senderId } : {}),
+      ...(recipient ? { recipient } : {}),
+    };
     const invalid = validateScopeSelection(
       next,
       library,
       conversations,
       showMessages,
+      selfId,
     );
     if (invalid) {
       setError(invalid);
@@ -103,6 +133,7 @@ export function ScopeForm({
       <Form.Dropdown
         id="range"
         title="Search Scope"
+        placeholder="Choose a search scope"
         value={kind}
         onChange={(value) => {
           setKind(value as typeof kind);
@@ -113,6 +144,7 @@ export function ScopeForm({
         <Form.Dropdown.Item value="favorites" title="Favorite Channels" />
         <Form.Dropdown.Item value="section" title="Section" />
         <Form.Dropdown.Item value="channel" title="Channels" />
+        <Form.Dropdown.Item value="dm" title="Direct Message" />
       </Form.Dropdown>
       {kind === "section" && (
         <Form.Dropdown
@@ -152,9 +184,34 @@ export function ScopeForm({
           ))}
         </Form.Dropdown>
       )}
+      {kind === "dm" && (
+        <Form.Dropdown
+          id="dm"
+          title="Direct Message With"
+          placeholder="Choose a person"
+          info="Searches only your DM with this person"
+          filtering
+          value={dmUserId}
+          onChange={(id) => {
+            setDmUserId(id);
+            setError(undefined);
+          }}
+          error={error}
+        >
+          {dmUserId && !others.some((p) => p.id === dmUserId) && (
+            <Form.Dropdown.Item value={dmUserId} title="Selected Person" />
+          )}
+          {others.map((p) => (
+            <Form.Dropdown.Item key={p.id} value={p.id} title={nameOf(p)} />
+          ))}
+        </Form.Dropdown>
+      )}
       <Form.Dropdown
         id="sender"
         title="Sender"
+        placeholder="Choose who posted the message"
+        info="Messages posted by this person"
+        filtering
         value={senderId}
         onChange={(id) => {
           setSenderId(id);
@@ -162,18 +219,46 @@ export function ScopeForm({
         }}
       >
         <Form.Dropdown.Item value="" title="None" />
-        {people.map((p) => (
-          <Form.Dropdown.Item
-            key={p.id}
-            value={p.id}
-            title={p.displayName || p.realName || p.handle}
-          />
+        {selfId && <Form.Dropdown.Item value={selfId} title="Me" />}
+        {senderId &&
+          senderId !== selfId &&
+          !others.some((p) => p.id === senderId) && (
+            <Form.Dropdown.Item value={senderId} title="Selected Sender" />
+          )}
+        {others.map((p) => (
+          <Form.Dropdown.Item key={p.id} value={p.id} title={nameOf(p)} />
+        ))}
+      </Form.Dropdown>
+      <Form.Dropdown
+        id="recipient"
+        title="Recipient"
+        placeholder="Choose who the message was sent to"
+        info="Mentions and DMs to Me finds messages that mention you and DMs sent to you. A person finds the DMs sent to that person"
+        filtering
+        value={recipientValue}
+        onChange={(value) => {
+          setRecipientValue(value);
+          setError(undefined);
+        }}
+      >
+        <Form.Dropdown.Item value="" title="None" />
+        <Form.Dropdown.Item value="me" title="Mentions and DMs to Me" />
+        {recipientValue &&
+          recipientValue !== "me" &&
+          !others.some((p) => p.id === recipientValue) && (
+            <Form.Dropdown.Item
+              value={recipientValue}
+              title="Selected Recipient"
+            />
+          )}
+        {others.map((p) => (
+          <Form.Dropdown.Item key={p.id} value={p.id} title={nameOf(p)} />
         ))}
       </Form.Dropdown>
       <Form.Description
         text={
           error ??
-          "Find messages matching both the scope and sender. Search starts only after applying the filters."
+          "Find messages matching the scope, sender, and recipient together. Search starts only after applying the filters."
         }
       />
     </Form>

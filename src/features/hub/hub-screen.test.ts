@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
+import * as hubScope from "../search-scope/hub-scope.ts";
 import * as orderFunctions from "./view-order.ts";
 
 // 実際のHubの描画部分を使い、Raycast本体を起動せず検索条件変更中の行を検査する。
@@ -200,6 +201,7 @@ function channelEntryHarness(
   searchText: string,
   messageMode: boolean,
   override: orderFunctions.OrderedSection | undefined,
+  scope: object = { range: { kind: "all" } },
 ) {
   const ast = ts.createSourceFile(
     "hub-screen.tsx",
@@ -248,7 +250,7 @@ function channelEntryHarness(
     searchText,
     messageMode,
     override,
-    scope: { range: { kind: "all" } },
+    scope,
     request: undefined as orderFunctions.SelectionRequest | undefined,
   };
   const exports: { create?: (state: object) => () => void } = {};
@@ -263,6 +265,7 @@ function channelEntryHarness(
     {
       exports,
       ...orderFunctions,
+      scopeForChannel: hubScope.scopeForChannel,
       item: { id: "C1" },
       setSearchScope: (scope: typeof next.scope) => {
         next.scope = scope;
@@ -324,3 +327,246 @@ for (const messageMode of [false, true]) {
     );
   });
 }
+
+// 条件を1つずつ外す Action。Hub の実際の宣言を取り出して動かし、検索語が残ることを確かめる。
+function removeHarness(
+  searchScope: object,
+  searchText: string,
+  messageMode = false,
+) {
+  const ast = ts.createSourceFile(
+    "hub-screen.tsx",
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  const declarations = new Map<string, string>();
+  function visit(node: ts.Node) {
+    if (ts.isVariableDeclaration(node) && node.initializer)
+      declarations.set(node.name.getText(ast), node.initializer.getText(ast));
+    ts.forEachChild(node, visit);
+  }
+  visit(ast);
+  for (const key of ["removeFilter", "removable", "removeActions"])
+    assert.ok(declarations.has(key), key);
+  const calls = {
+    scopes: [] as unknown[],
+    texts: [] as string[],
+    modes: [] as boolean[],
+    overrides: [] as unknown[],
+    requests: [] as { text: string; section: string }[],
+  };
+  const exports: {
+    build?: () => { props: { title: string; onAction: () => void } }[];
+  } = {};
+  runInNewContext(
+    ts.transpileModule(
+      `export function build() {
+    const removeFilter = ${declarations.get("removeFilter")};
+    const removable = ${declarations.get("removable")};
+    return ${declarations.get("removeActions")};
+  }`,
+      {
+        compilerOptions: {
+          module: ts.ModuleKind.CommonJS,
+          jsx: ts.JsxEmit.ReactJSX,
+        },
+      },
+    ).outputText,
+    {
+      exports,
+      require: (name: string) => {
+        assert.equal(name, "react/jsx-runtime");
+        const jsx = (type: unknown, props: unknown) => ({ type, props });
+        return { jsx, jsxs: jsx };
+      },
+      ...orderFunctions,
+      Action: "Action",
+      Icon: { XMarkCircle: "x-mark-circle" },
+      removableFilters: hubScope.removableFilters,
+      removeScopeFilter: hubScope.removeScopeFilter,
+      searchScope,
+      searchText,
+      messageMode,
+      candidates: [],
+      setMessageMode: (mode: boolean) => calls.modes.push(mode),
+      setSearchScope: (scope: unknown) => calls.scopes.push(scope),
+      setSearchText: (text: string) => calls.texts.push(text),
+      setOverride: (value: unknown) => calls.overrides.push(value),
+      setRequest: (request: { text: string; section: string }) =>
+        calls.requests.push(request),
+    },
+  );
+  return {
+    calls,
+    // vm の中で作られた配列は prototype が違うので、この側の配列に詰め直す
+    actions: () => [
+      ...exports.build!()
+        .filter(Boolean)
+        .map((action) => action.props),
+    ],
+  };
+}
+
+test("条件を外すActionは、指定中の条件の分だけ出る", () => {
+  const titles = (scope: object) =>
+    removeHarness(scope, "請求")
+      .actions()
+      .map((action) => action.title);
+  assert.deepEqual(titles({ range: { kind: "all" } }), []);
+  assert.deepEqual(titles({ range: { kind: "favorites" } }), [
+    "Remove Scope Filter",
+  ]);
+  assert.deepEqual(titles({ range: { kind: "all" }, senderId: "U2" }), [
+    "Remove Sender Filter",
+  ]);
+  assert.deepEqual(
+    titles({ range: { kind: "all" }, recipient: { kind: "me" } }),
+    ["Remove Recipient Filter"],
+  );
+  assert.deepEqual(
+    titles({
+      range: { kind: "dm", userId: "U2" },
+      senderId: "U1",
+      recipient: { kind: "me" },
+    }),
+    ["Remove Scope Filter", "Remove Sender Filter", "Remove Recipient Filter"],
+  );
+});
+
+test("条件を外すActionは、その条件だけを外し、検索語も残りの条件も保つ", () => {
+  const scope = {
+    range: { kind: "channel", channelId: "C1" },
+    senderId: "U2",
+    recipient: { kind: "me" },
+  };
+  const expected: Record<string, object> = {
+    "Remove Scope Filter": {
+      range: { kind: "all" },
+      senderId: "U2",
+      recipient: { kind: "me" },
+    },
+    "Remove Sender Filter": {
+      range: { kind: "channel", channelId: "C1" },
+      recipient: { kind: "me" },
+    },
+    "Remove Recipient Filter": {
+      range: { kind: "channel", channelId: "C1" },
+      senderId: "U2",
+    },
+  };
+  for (const [title, next] of Object.entries(expected)) {
+    const ui = removeHarness(scope, "請求");
+    ui.actions()
+      .find((action) => action.title === title)!
+      .onAction();
+    assert.deepEqual(
+      JSON.parse(JSON.stringify(ui.calls.scopes)),
+      [next],
+      title,
+    );
+    // 検索語は書き換えない
+    assert.deepEqual(ui.calls.texts, [], title);
+    assert.deepEqual(ui.calls.overrides, [undefined], title);
+    assert.equal(ui.calls.requests.length, 1, title);
+    assert.equal(ui.calls.requests[0].text, "請求", title);
+  }
+});
+
+test("条件を外すActionと条件の選択画面は、検索結果の行・会話の行・空の状態・競合の行のすべてで使える", () => {
+  const ast = ts.createSourceFile(
+    "hub-screen.tsx",
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  const declarations = new Map<string, string>();
+  const titles: string[] = [];
+  function visit(node: ts.Node) {
+    if (ts.isVariableDeclaration(node) && node.initializer)
+      declarations.set(node.name.getText(ast), node.initializer.getText(ast));
+    if (ts.isJsxSelfClosingElement(node)) {
+      for (const attribute of node.attributes.properties)
+        if (
+          ts.isJsxAttribute(attribute) &&
+          attribute.name.getText(ast) === "title" &&
+          attribute.initializer &&
+          ts.isStringLiteral(attribute.initializer)
+        )
+          titles.push(attribute.initializer.text);
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(ast);
+  for (const title of [
+    // サブ画面を開く Action には末尾に … を付ける
+    "Choose Search Filters…",
+    "Remove Scope Filter",
+    "Remove Sender Filter",
+    "Remove Recipient Filter",
+  ])
+    assert.ok(titles.includes(title), title);
+  assert.ok(!titles.includes("Choose Search Filters"));
+  // 会話・メッセージ・失敗の行が使う共通操作と、空の状態・検索の停止の行が使う操作の両方に入る
+  assert.match(declarations.get("commonActions")!, /\.\.\.removeActions/);
+  assert.match(
+    declarations.get("standaloneWithDetails")!,
+    /\.\.\.removeActions/,
+  );
+  assert.match(source, /\{scopeAction\}\s*\{removeActions\}/);
+  assert.match(
+    source,
+    /\{scopeAction\}\s*\{removeActions\}[\s\S]*Reload from Beginning/,
+  );
+  assert.match(
+    source,
+    /actions=\{<ActionPanel>\{standaloneWithDetails\("empty"\)\}<\/ActionPanel>\}/,
+  );
+});
+
+test("条件を外して条件が1つも残らないときだけ、メッセージ表示の指定を解く", () => {
+  const remove = (scope: object, title: string) => {
+    const ui = removeHarness(scope, "", true);
+    ui.actions()
+      .find((action) => action.title === title)!
+      .onAction();
+    return { modes: [...ui.calls.modes], request: ui.calls.requests[0] };
+  };
+  // 最後の条件を外す：会話の一覧に戻る（Clear Filters and Apply と同じ）
+  const last = remove(
+    { range: { kind: "all" }, senderId: "U2" },
+    "Remove Sender Filter",
+  );
+  assert.deepEqual(last.modes, [false]);
+  assert.notEqual(last.request.section, "messages");
+  // 条件が残るなら、メッセージ表示のまま
+  const rest = remove(
+    { range: { kind: "favorites" }, senderId: "U2" },
+    "Remove Sender Filter",
+  );
+  assert.deepEqual(rest.modes, [true]);
+  assert.equal(rest.request.section, "messages");
+});
+
+test("チャンネルのメッセージ検索入口は、人宛てだけを外して送信者と自分宛てを持ち越す", () => {
+  const run = (scope: object) => {
+    const ui = channelEntryHarness("", false, undefined, scope);
+    ui.action();
+    return JSON.parse(JSON.stringify(ui.next.scope));
+  };
+  const channel = { kind: "channel", channelId: "C1" };
+  assert.deepEqual(
+    run({
+      range: { kind: "all" },
+      senderId: "U2",
+      recipient: { kind: "person", userId: "U3" },
+    }),
+    { range: channel, senderId: "U2" },
+  );
+  assert.deepEqual(
+    run({ range: { kind: "all" }, senderId: "U2", recipient: { kind: "me" } }),
+    { range: channel, senderId: "U2", recipient: { kind: "me" } },
+  );
+});

@@ -18,11 +18,21 @@ export function hubFavorites(
     ]),
   ];
 }
+const personName = (
+  people: readonly Person[],
+  id: string,
+  fallback: string,
+) => {
+  const person = people.find((p) => p.id === id);
+  return person?.displayName || person?.realName || person?.handle || fallback;
+};
+// 一覧の上に出す、指定中の条件。例：All / From: Alice / To: Me。selfId が分かれば、自分は Me と出す
 export function searchScopeTitle(
   scope: SearchScope,
   library: ChannelLibrary,
   conversations: readonly Conversation[],
   people: readonly Person[],
+  selfId?: string,
 ): string {
   const range = scope.range;
   const label =
@@ -33,9 +43,54 @@ export function searchScopeTitle(
         : range.kind === "section"
           ? (library.sections.find((s) => s.id === range.sectionId)?.name ??
             "Deleted Section")
-          : `#${conversations.find((c) => c.id === range.channelId)?.name ?? "Unavailable Channel"}`;
-  const sender = people.find((p) => p.id === scope.senderId);
-  return scope.senderId
-    ? `${label} / ${sender?.displayName || sender?.realName || sender?.handle || "Selected Sender"}`
-    : label;
+          : range.kind === "dm"
+            ? `DM: ${range.userId === selfId ? "Me" : personName(people, range.userId, "Selected Person")}`
+            : `#${conversations.find((c) => c.id === range.channelId)?.name ?? "Unavailable Channel"}`;
+  const parts = [label];
+  if (scope.senderId)
+    parts.push(
+      `From: ${scope.senderId === selfId ? "Me" : personName(people, scope.senderId, "Selected Sender")}`,
+    );
+  if (scope.recipient)
+    parts.push(
+      `To: ${
+        scope.recipient.kind === "me"
+          ? "Me"
+          : personName(people, scope.recipient.userId, "Selected Recipient")
+      }`,
+    );
+  return parts.join(" / ");
+}
+export type RemovableFilter = "range" | "sender" | "recipient";
+// 外せる条件。条件があるものだけを、範囲 → 送信者 → 宛先の順に返す
+export function removableFilters(scope: SearchScope): RemovableFilter[] {
+  return [
+    ...(scope.range.kind !== "all" ? (["range"] as const) : []),
+    ...(scope.senderId ? (["sender"] as const) : []),
+    ...(scope.recipient ? (["recipient"] as const) : []),
+  ];
+}
+// 条件を1つだけ外す。ほかの条件は残す（検索語は SearchScope の外にあるので、ここでは触れない）
+export function removeScopeFilter(
+  scope: SearchScope,
+  filter: RemovableFilter,
+): SearchScope {
+  if (filter === "range") return { ...scope, range: { kind: "all" } };
+  const { senderId, recipient, ...rest } = scope;
+  return filter === "sender"
+    ? { ...rest, ...(recipient ? { recipient } : {}) }
+    : { ...rest, ...(senderId ? { senderId } : {}) };
+}
+// 1つのチャンネルに範囲を絞る。送信者と、自分宛ての宛先は残す（そのチャンネルでの自分へのメンションに絞れる）。
+// 人宛てはチャンネルに当たらず必ず競合になるので、ここで外す
+export function scopeForChannel(
+  scope: SearchScope,
+  channelId: string,
+): SearchScope {
+  const { recipient, ...rest } = scope;
+  return {
+    ...rest,
+    range: { kind: "channel", channelId },
+    ...(recipient?.kind === "me" ? { recipient } : {}),
+  };
 }

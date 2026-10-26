@@ -124,7 +124,7 @@ export function createTriageFetchers(ports: Ports) {
     if (outcome.kind === "aborted") {
       return {
         kind: "failed",
-        message: "Search cancelled",
+        message: "Search canceled",
       };
     }
     const { failure } = outcome;

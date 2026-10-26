@@ -18,7 +18,7 @@ const sleep = (ms: number, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
     const abort = () => {
       clearTimeout(timer);
-      reject(new SlackApiError("aborted", "Request cancelled"));
+      reject(new SlackApiError("aborted", "Request canceled"));
     };
     const timer = setTimeout(() => {
       signal?.removeEventListener("abort", abort);
@@ -50,7 +50,7 @@ export function createRequestPolicy(config: PolicyConfig): RequestPolicy {
         const deadline =
           options.deadlineAt ?? started + (options.timeoutMs ?? 30000);
         if (options.signal?.aborted)
-          throw new SlackApiError("aborted", "Request cancelled");
+          throw new SlackApiError("aborted", "Request canceled");
         let retryAt = now() + 20,
           paused = false,
           sent = false;

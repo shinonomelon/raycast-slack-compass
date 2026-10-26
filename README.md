@@ -9,11 +9,15 @@ Search supports fuzzy name matching, favorites, sections, filtering by sender an
 - A Slack workspace where you can create or install a Slack app
 - A Slack User OAuth Token (`xoxp-`) with the scopes listed below
 - The Slack desktop app, which Slack Compass uses to open conversations
-- To run from source: macOS, Raycast, git, and Node.js 22.22.2 or later
+- macOS and Raycast
 
 ## Setup
 
-### 1. Get a Slack user token
+### 1. Install Slack Compass
+
+Open the Raycast Store, search for **Slack Compass**, and install it. To run it from source instead, see [Run from source](docs/reference.md#run-from-source).
+
+### 2. Get a Slack user token
 
 1. Create an app in the [Slack app dashboard](https://api.slack.com/apps) and choose your workspace.
 2. Under **OAuth & Permissions → User Token Scopes**, add these eight scopes:
@@ -40,20 +44,9 @@ Search supports fuzzy name matching, favorites, sections, filtering by sender an
 
 The token lets Slack Compass read and write Slack as you. Do not paste it into GitHub or chat. After you copy it into Raycast, clear it from your clipboard history.
 
-### 2. Install the extension in Raycast
-
-```bash
-git clone https://github.com/shinonomelon/raycast-slack-hub.git ~/raycast-slack-hub
-cd ~/raycast-slack-hub
-npm ci
-npm run dev
-```
-
-When the terminal prints `built extension successfully`, the extension is imported. You can stop the command with Control+C. The extension stays in Raycast.
-
 ### 3. Add the token to Raycast
 
-Open Raycast Settings → **Extensions → Slack Compass → Slack Access Token**, paste the token, and open **Search Slack** again. The first launch takes a moment while it loads conversations and people.
+Open **Search Slack**. Raycast asks for the **Slack Access Token** the first time; paste the token there. You can change it later in Raycast Settings → **Extensions → Slack Compass**. The first launch takes a moment while it loads conversations and people.
 
 If you changed your Slack handle in the past, enter your old handles in **Previous Handles**, separated by commas.
 
@@ -95,13 +88,15 @@ Slack Compass stores its cache and settings in `~/Library/Application Support/co
 
 - If Slack Compass shows "Delivery has not been confirmed", the message may have been sent. Choose Open Conversation (or Open Parent Message for a reply) and check Slack before you send it again. Sending again can post the same message twice.
 - For `missing_scope`, add the scope that Slack Compass names to User Token Scopes, reinstall the app, and update the token in Raycast if it changed.
-- To update the extension, run `git pull --ff-only`, `npm ci`, and `npm run dev` in the extension folder.
+- Raycast updates Store extensions automatically. If you run Slack Compass from source, see [Run from source](docs/reference.md#run-from-source) to update it.
 
 See [Settings, stored data, and troubleshooting](docs/reference.md#troubleshooting) for more. If a problem remains, open a [GitHub issue](https://github.com/shinonomelon/raycast-slack-hub/issues) with the steps you took and the error shown. Do not include tokens or real message text.
 
 ## Development
 
 Use Node.js 22.22.2 or later.
+
+To get the source, see [Run from source](docs/reference.md#run-from-source).
 
 ```bash
 npm ci

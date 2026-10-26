@@ -11,6 +11,7 @@ import {
 } from "@raycast/api";
 import { useState } from "react";
 import { normalize, type DictionaryRule } from "../search/search.ts";
+import { countLabel } from "../../shared/plural.ts";
 function AddRule({ onSubmit }: { onSubmit: (rule: DictionaryRule) => void }) {
   const { pop } = useNavigation();
   const [fromError, setFromError] = useState<string>();
@@ -71,7 +72,10 @@ export function Dictionary({
     />
   );
   return (
-    <List navigationTitle="Name Replacement Dictionary">
+    <List
+      navigationTitle="Name Replacement Dictionary"
+      searchBarPlaceholder="Search replacements"
+    >
       <List.EmptyView
         title="No replacements yet"
         description="Use Add Rule in Actions (example: documents → docs)"
@@ -84,7 +88,7 @@ export function Dictionary({
           <List.Item
             key={`${rule.from}-${index}`}
             title={`${rule.from} → ${rule.to}`}
-            accessories={[{ text: `${hits} results` }]}
+            accessories={[{ text: countLabel(hits, "result") }]}
             actions={
               <ActionPanel>
                 {addAction}

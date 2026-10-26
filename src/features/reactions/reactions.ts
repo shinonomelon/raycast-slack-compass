@@ -10,6 +10,7 @@ import {
   SlackApiError,
   type ApiCall,
 } from "../../slack/slack-api.ts";
+import { countLabel } from "../../shared/plural.ts";
 
 // 書き込みも読み取りも30秒で打ち切る。書き込みの時間切れは「失敗」でなく「反映されたか未確認」として扱う
 export const REACTION_TIMEOUT_MS = 30000;
@@ -297,7 +298,7 @@ export function mineNotices(mine: MyReactions): string[] {
     notices.push(
       mine.unremovable === 1
         ? "1 reaction of yours has a name Slack Compass cannot remove. Remove it in Slack"
-        : `${mine.unremovable} reactions of yours have names Slack Compass cannot remove. Remove them in Slack`,
+        : `${countLabel(mine.unremovable, "reaction")} of yours have names Slack Compass cannot remove. Remove them in Slack`,
     );
   if (mine.incomplete)
     notices.push(
@@ -330,7 +331,7 @@ export async function fetchMyReactions(
     return { kind: "ready", ...myReactionNames(data, target, selfId) };
   } catch (error) {
     if (error instanceof SlackApiError && error.kind === "aborted")
-      return { kind: "failed", message: "Cancelled" };
+      return { kind: "failed", message: "Canceled" };
     return {
       kind: "failed",
       message:

@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { RequestPolicy } from "./request-policy.ts";
 import type { RequestMetrics } from "./request-metrics.ts";
 import { setApiContext } from "./request-context.ts";
+import { countLabel } from "../shared/plural.ts";
 
 // Slack公式Web APIへの通信。認証情報はヘッダーだけに載せ、応答や通信例外に含まれる秘密を表示しない。
 export type ApiMethod =
@@ -120,18 +121,18 @@ export function createSlackApi(
       const seconds = Math.ceil(remaining / 1000);
       throw new SlackApiError(
         "rate_limited",
-        `Slack API rate limit. Retry in ${seconds} seconds`,
+        `Slack API rate limit. Retry in ${countLabel(seconds, "second")}`,
         seconds,
         "ratelimited",
       );
     }
     if (options.signal?.aborted)
-      throw new SlackApiError("aborted", "Request cancelled");
+      throw new SlackApiError("aborted", "Request canceled");
     const waitMs = config.policy
       ? await config.policy.beforeSend(method, options)
       : 0;
     if (options.signal?.aborted)
-      throw new SlackApiError("aborted", "Request cancelled");
+      throw new SlackApiError("aborted", "Request canceled");
     config.metrics?.record(
       options.source ?? "unknown",
       method,
@@ -150,7 +151,7 @@ export function createSlackApi(
     try {
       if (options.signal?.aborted) abort();
       if (controller.signal.aborted)
-        throw new SlackApiError("aborted", "Request cancelled");
+        throw new SlackApiError("aborted", "Request canceled");
       const post = POST_METHODS.has(method);
       const url = new URL(`https://slack.com/api/${method}`);
       if (!post)
@@ -171,7 +172,7 @@ export function createSlackApi(
         signal: controller.signal,
       };
       if (options.signal?.aborted || controller.signal.aborted)
-        throw new SlackApiError("aborted", "Request cancelled");
+        throw new SlackApiError("aborted", "Request canceled");
       sentCallbacks.get(options)?.();
       const responsePromise = fetcher(url, init);
       config.metrics?.record(options.source ?? "unknown", method, "requests");
@@ -188,7 +189,7 @@ export function createSlackApi(
         );
         throw new SlackApiError(
           "rate_limited",
-          `Slack API rate limit. Retry in ${seconds} seconds`,
+          `Slack API rate limit. Retry in ${countLabel(seconds, "second")}`,
           seconds,
           "ratelimited",
         );
@@ -246,10 +247,10 @@ export function createSlackApi(
       if (timedOut)
         throw new SlackApiError(
           "timeout",
-          `Slack API request timed out after ${timeoutMs / 1000} seconds`,
+          `Slack API request timed out after ${countLabel(timeoutMs / 1000, "second")}`,
         );
       if (options.signal?.aborted)
-        throw new SlackApiError("aborted", "Request cancelled");
+        throw new SlackApiError("aborted", "Request canceled");
       if (error instanceof SlackApiError) throw error;
       throw new SlackApiError("network", "Could not connect to the Slack API");
     } finally {
@@ -278,7 +279,7 @@ export function createSlackApi(
   };
   const api: ApiCall = (method, params = {}, options = {}) => {
     if (options.signal?.aborted)
-      return Promise.reject(new SlackApiError("aborted", "Request cancelled"));
+      return Promise.reject(new SlackApiError("aborted", "Request canceled"));
     if (
       options.dedupe === false ||
       method === "chat.postMessage" ||
@@ -348,7 +349,7 @@ export function createSlackApi(
         else resolve(data!);
       };
       const abort = () =>
-        finish(new SlackApiError("aborted", "Request cancelled"));
+        finish(new SlackApiError("aborted", "Request canceled"));
       options.signal?.addEventListener("abort", abort, { once: true });
       if (options.signal?.aborted) abort();
       if (options.deadlineAt !== undefined)

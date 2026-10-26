@@ -2,6 +2,7 @@ import { toItems } from "../../slack/items.ts";
 import { rankItems } from "../search/search.ts";
 import type { Person, Prefs } from "../../shared/types.ts";
 import type { MembershipState } from "./membership.ts";
+import { countLabel } from "../../shared/plural.ts";
 export function memberRows(
   ids: readonly string[],
   people: readonly Person[],
@@ -46,8 +47,9 @@ export function membershipStatus(state: MembershipState): string {
   if (state.status === "loading")
     return `${previous}Refreshing${time ? ` · ${time}` : ""}`;
   if (state.status === "rate-limited" || state.status === "deferred")
-    return `${previous}${state.error} · Retry in ${state.retryAfter} seconds${time ? ` · ${time}` : ""}`;
+    // 待ち秒数が無い状態でも undefined を出さないよう、そのときは「Retry in」ごと省く
+    return `${previous}${state.error}${state.retryAfter === undefined ? "" : ` · Retry in ${countLabel(state.retryAfter, "second")}`}${time ? ` · ${time}` : ""}`;
   if (state.status === "failed" || state.status === "auth-required")
     return `${previous}${state.error ?? "Check authentication preferences and reopen Slack Compass"}${time ? ` · ${time}` : ""}`;
-  return `${state.data.length} results${time ? ` · ${time}` : ""}`;
+  return `${countLabel(state.data.length, "result")}${time ? ` · ${time}` : ""}`;
 }

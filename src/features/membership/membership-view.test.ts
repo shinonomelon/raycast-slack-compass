@@ -72,3 +72,22 @@ test("前回結果、失敗、429を0件成功の表示と混同しない", () =
     /0 results.*Fetched at/,
   );
 });
+test("件数と待ち秒数は1のとき単数形にし、待ち秒数が分からなければRetry inを出さない", () => {
+  assert.match(
+    membershipStatus({ status: "ready", data: ["U1"] }),
+    /^1 result$/,
+  );
+  assert.match(
+    membershipStatus({
+      status: "rate-limited",
+      data: [],
+      error: "Rate limited",
+      retryAfter: 1,
+    }),
+    /Retry in 1 second$/,
+  );
+  assert.equal(
+    membershipStatus({ status: "deferred", data: [], error: "Paused" }),
+    "Paused",
+  );
+});

@@ -284,7 +284,7 @@ test("時間切れ・通信エラー・HTTPエラー・読めない応答・Slac
     new SlackApiError("network", "Could not connect to the Slack API"),
     new SlackApiError("http", "Slack API HTTP error (502)"),
     new SlackApiError("unreadable", "Could not read the Slack API response"),
-    new SlackApiError("aborted", "Request cancelled"),
+    new SlackApiError("aborted", "Request canceled"),
     apiError("internal_error"),
     apiError("service_unavailable"),
     apiError("fatal_error"),

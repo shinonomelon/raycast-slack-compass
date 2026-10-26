@@ -14,7 +14,7 @@ const unreadable = () =>
   new SlackApiError("unreadable", "Could not read the membership response");
 export function checkRequest(request: MembershipRequest): number {
   if (request.signal.aborted)
-    throw new SlackApiError("aborted", "Request cancelled");
+    throw new SlackApiError("aborted", "Request canceled");
   const remaining = request.deadline - (request.now ?? Date.now)();
   if (remaining <= 0)
     throw new SlackApiError("timeout", "Membership request timed out");

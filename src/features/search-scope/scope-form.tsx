@@ -143,7 +143,7 @@ export function ScopeForm({
         <Form.Dropdown.Item value="all" title="All" />
         <Form.Dropdown.Item value="favorites" title="Favorite Channels" />
         <Form.Dropdown.Item value="section" title="Section" />
-        <Form.Dropdown.Item value="channel" title="Channels" />
+        <Form.Dropdown.Item value="channel" title="Channel" />
         <Form.Dropdown.Item value="dm" title="Direct Message" />
       </Form.Dropdown>
       {kind === "section" && (
@@ -174,7 +174,7 @@ export function ScopeForm({
       {kind === "channel" && (
         <Form.Dropdown
           id="channel"
-          title="Channels"
+          title="Channel"
           value={channelId}
           onChange={setChannelId}
           error={error}

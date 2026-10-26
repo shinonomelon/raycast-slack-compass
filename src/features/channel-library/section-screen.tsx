@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import type { Conversation } from "../../shared/types.ts";
 import type { ChannelLibrary, LibraryMutation } from "./model.ts";
+import { countLabel } from "../../shared/plural.ts";
 export type LibraryMutator = (
   mutation: LibraryMutation,
 ) => Promise<ChannelLibrary | false>;
@@ -101,6 +102,7 @@ function MutationForm({
         <Form.TextField
           id="name"
           title="Section Name"
+          placeholder="Design Reviews"
           value={name}
           onChange={setName}
           error={error}
@@ -161,7 +163,7 @@ export function SectionScreen({
           <List.Item
             key={section.id}
             title={section.name}
-            subtitle={`${section.channelIds.length} channels`}
+            subtitle={countLabel(section.channelIds.length, "channel")}
             icon={Icon.Folder}
             actions={
               <ActionPanel>

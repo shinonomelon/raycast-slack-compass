@@ -47,18 +47,9 @@ On first launch, favorites, aliases, and the dictionary start empty. Slack Compa
 
 ## Update and uninstall
 
-Update the extension from its repository folder.
+Raycast updates Store extensions automatically. If you run Slack Compass from source, update it as described in [Run from source](#run-from-source).
 
-```bash
-cd ~/raycast-slack-hub
-git pull --ff-only
-npm ci
-npm run dev
-```
-
-When the import finishes, stop the command with Control+C. Your Raycast settings stay in place after an update.
-
-To uninstall, remove Slack Compass in Raycast Settings → Extensions. You can also delete the source folder. If the extension's saved-data folder remains, deleting it removes your settings, cache, and data from earlier versions. To revoke the token, revoke it for your app in the [Slack app dashboard](https://api.slack.com/apps), or delete the app you no longer need.
+To uninstall, remove Slack Compass in Raycast Settings → Extensions. If you ran it from source, you can also delete the source folder. If the extension's saved-data folder remains, deleting it removes your settings, cache, and data from earlier versions. To revoke the token, revoke it for your app in the [Slack app dashboard](https://api.slack.com/apps), or delete the app you no longer need.
 
 ## Choose a background refresh frequency
 
@@ -94,6 +85,28 @@ If a problem remains, open a [GitHub issue](https://github.com/shinonomelon/rayc
 ## Development
 
 See [Development](../README.md#development) in the README for tests, builds, and request metrics.
+
+### Run from source
+
+You need macOS, Raycast, git, and Node.js 22.22.2 or later.
+
+```bash
+git clone https://github.com/shinonomelon/raycast-slack-hub.git ~/raycast-slack-hub
+cd ~/raycast-slack-hub
+npm ci
+npm run dev
+```
+
+When the terminal prints `built extension successfully`, the extension is imported. You can stop the command with Control+C. The extension stays in Raycast.
+
+To update a source install, run these commands, then stop `npm run dev` with Control+C when the import finishes. Your Raycast settings stay in place.
+
+```bash
+cd ~/raycast-slack-hub
+git pull --ff-only
+npm ci
+npm run dev
+```
 
 ## Data from earlier versions
 

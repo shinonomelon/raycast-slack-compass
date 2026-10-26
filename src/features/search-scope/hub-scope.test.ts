@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  activeScopeSummary,
   hubFavorites,
+  hubSearchPlaceholder,
   removableFilters,
   removeScopeFilter,
   scopeForChannel,
@@ -180,4 +182,22 @@ test("チャンネルへ絞るとき、送信者と自分宛ては残し、人�
   assert.deepEqual(scopeForChannel({ range: { kind: "all" } }, "C1"), {
     range: channel,
   });
+});
+
+test("検索欄の例文は、既定の条件ならSearch Slack、条件を選んでいればその条件を足す", () => {
+  const all: SearchScope = { range: { kind: "all" } };
+  const fromMe: SearchScope = { range: { kind: "all" }, senderId: "U1" };
+  assert.equal(activeScopeSummary(all, "All"), undefined);
+  assert.equal(
+    hubSearchPlaceholder(activeScopeSummary(all, "All")),
+    "Search Slack",
+  );
+  assert.equal(
+    hubSearchPlaceholder(activeScopeSummary(fromMe, "All / From: Me")),
+    "Search Slack · All / From: Me",
+  );
+  assert.equal(
+    activeScopeSummary({ range: { kind: "favorites" } }, "Favorite Channels"),
+    "Favorite Channels",
+  );
 });

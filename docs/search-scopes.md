@@ -4,7 +4,7 @@
 
 You can narrow message search by favorites, sections, channels, a DM, sender, and recipient. Sections are a way to organize channels inside Slack Compass. They do not sync with the sections in the Slack sidebar.
 
-The filters you set appear in the title of the list, for example `Slack Compass · All / From: Alice / To: Me`. Your search term is not part of the filters, so you can change or remove a filter without retyping it.
+The filters you set appear in the empty search bar, for example `Search Slack · All / From: Alice / To: Me`, and next to the Messages heading once results appear. Your search term is not part of the filters, so you can change or remove a filter without retyping it.
 
 ## How to search
 

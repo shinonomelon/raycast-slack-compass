@@ -45,7 +45,7 @@ Reading a detail does not mark the message as handled. The same actions work in 
 
 ### Search by scope, sender, and recipient
 
-In Actions, choose Choose Search Filters…. You can pick All, Favorite Channels, a section, channels, or a DM with one person. You can also pick a sender (including Me) and a recipient (Mentions and DMs to Me, or one person, which finds direct messages sent to that person). Choose Show Messages to search even with no search term. The filters you set appear in the list title, for example `All / From: Alice / To: Me`.
+In Actions, choose Choose Search Filters…. You can pick All, Favorite Channels, a section, a channel, or a DM with one person. You can also pick a sender (including Me) and a recipient (Mentions and DMs to Me, or one person, which finds direct messages sent to that person). Choose Show Messages to search even with no search term. The filters you set appear in the empty search bar, for example `Search Slack · All / From: Alice / To: Me`, and next to the Messages heading once results appear.
 
 To remove one filter while keeping your search term, choose Remove Scope Filter, Remove Sender Filter, or Remove Recipient Filter in Actions. They appear only while that filter is set. Typing `in:`, `from:`, and `to:` in the search bar still works. For sections, DMs, recipients, and how typed terms combine with selected filters, see [Choosing a search scope](search-scopes.md).
 

@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
 import * as hubScope from "../search-scope/hub-scope.ts";
+import { countLabel } from "../../shared/plural.ts";
 import * as orderFunctions from "./view-order.ts";
 
 // 実際のHubの描画部分を使い、Raycast本体を起動せず検索条件変更中の行を検査する。
@@ -18,6 +19,7 @@ const compiled = ts.transpileModule(
   `export function render(search, resolved, session, rows, statusRow) {
     const List = { Section: "section" };
     const filterLabels = resolved.filters.map(f => f.modifier + ":" + f.label).join(" ");
+    const scopeSummary = session.scopeSummary;
     const messageRow = hit => { rows.push(hit); return hit; };
     const messageRowId = hit => hit.key;
     const triage = { marks: new Set() };
@@ -37,13 +39,14 @@ const moduleExports = {} as {
   render: (
     search: Search,
     resolved: { query: string; filters: { modifier: string; label: string }[] },
-    session: { canFetch: boolean },
+    session: { canFetch: boolean; scopeSummary?: string },
     rows: Search["hits"],
     statusRow: unknown,
   ) => Section;
 };
 runInNewContext(compiled, {
   exports: moduleExports,
+  countLabel,
   require: (name: string) => {
     assert.equal(name, "react/jsx-runtime");
     const jsx = (type: unknown, props: unknown) => ({ type, props });
@@ -53,12 +56,17 @@ runInNewContext(compiled, {
 
 const a = { key: "CA:1", channelId: "CA" };
 const b = { key: "CB:2", channelId: "CB" };
-function render(search: Search, query: string, statusRow?: unknown) {
+function render(
+  search: Search,
+  query: string,
+  statusRow?: unknown,
+  scopeSummary?: string,
+) {
   const rows: Search["hits"] = [];
   const section = moduleExports.render(
     search,
     { query, filters: [{ modifier: "in", label: query }] },
-    { canFetch: true },
+    { canFetch: true, scopeSummary },
     rows,
     statusRow,
   );
@@ -74,7 +82,23 @@ test("Hubは条件変更直後と取得待ちの間に前の条件のメッセ�
   assert.deepEqual(render(previous, "bravo", "status").rows, []);
   const current = render({ query: "bravo", hits: [b] }, "bravo");
   assert.deepEqual(current.rows, [b]);
-  assert.equal(current.section?.props.subtitle, "in:bravo · 1 results");
+  assert.equal(current.section?.props.subtitle, "in:bravo · 1 result");
+});
+
+test("Hubは選んだ検索条件をMessagesの見出しの先頭に出し、一番上の画面のタイトルは変えない", () => {
+  const search = { query: "bravo", hits: [b] };
+  assert.equal(
+    render(search, "bravo", undefined, "All / From: Me").section?.props
+      .subtitle,
+    "All / From: Me · in:bravo · 1 result",
+  );
+  // Store のルール：最初に開く画面（検索結果の List）の navigationTitle は設定しない
+  const root = source.slice(
+    source.indexOf("    <List\n      isLoading={"),
+    source.indexOf("      searchBarAccessory="),
+  );
+  assert.ok(root.includes("searchBarPlaceholder="));
+  assert.doesNotMatch(root, /navigationTitle/);
 });
 
 test("Hubは同じ検索式の再取得中にはその検索結果を表示できる", () => {

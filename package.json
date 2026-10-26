@@ -9,20 +9,25 @@
   "categories": [
     "Communication"
   ],
+  "platforms": [
+    "macOS"
+  ],
   "preferences": [
     {
       "name": "accessToken",
       "title": "Slack Access Token",
       "description": "Your Slack User OAuth Token (xoxp-). See the README for setup.",
       "type": "password",
-      "required": true
+      "required": true,
+      "placeholder": "xoxp-..."
     },
     {
       "name": "previousHandles",
       "title": "Previous Handles",
       "description": "If you changed your Slack handle, list your previous handles separated by commas.",
       "type": "textfield",
-      "required": false
+      "required": false,
+      "placeholder": "old-handle, another-handle"
     },
     {
       "name": "backgroundRefreshFrequency",
@@ -90,8 +95,8 @@
     }
   ],
   "dependencies": {
-    "@raycast/api": "^2.4.0",
-    "@raycast/utils": "^2.3.2"
+    "@raycast/api": "^2.9.0",
+    "@raycast/utils": "^2.3.3"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^2.2.0",
@@ -106,7 +111,8 @@
     "dev": "ray develop",
     "lint": "ray lint",
     "fix-lint": "ray lint --fix",
-    "test": "node scripts/test.mjs"
+    "test": "node scripts/test.mjs",
+    "publish": "npx @raycast/api@latest publish"
   },
   "engines": {
     "node": ">=22.22.2"

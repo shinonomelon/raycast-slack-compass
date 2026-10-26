@@ -42,6 +42,8 @@ import {
   removeScopeFilter,
   scopeForChannel,
   searchScopeTitle,
+  activeScopeSummary,
+  hubSearchPlaceholder,
   type RemovableFilter,
 } from "../search-scope/hub-scope.ts";
 import {
@@ -130,6 +132,7 @@ import {
   type OrderedSection,
   type SelectionRequest,
 } from "./view-order.ts";
+import { countLabel } from "../../shared/plural.ts";
 const ICONS: Record<Kind, Icon> = {
   channel: Icon.Hashtag,
   private: Icon.Lock,
@@ -218,7 +221,7 @@ function NoIdentity({
   checking: boolean;
 }) {
   return (
-    <List isLoading={checking}>
+    <List isLoading={checking} searchBarPlaceholder="Search Slack">
       {failure ? (
         <List.EmptyView
           icon={FAILURE_ICON}
@@ -333,10 +336,11 @@ function Hub({
     people.data ?? [],
     identity.userId,
   );
+  const scopeSummary = activeScopeSummary(searchScope, scopeTitle);
   const scopeWarning = scopeResolution.missingSection
     ? "The selected section was deleted. Choose search filters again"
     : scopeResolution.unresolvedChannelIds.length
-      ? `Excluded ${scopeResolution.unresolvedChannelIds.length} unavailable channels. Refresh the directory`
+      ? `Excluded ${countLabel(scopeResolution.unresolvedChannelIds.length, "unavailable channel")}. Refresh the directory`
       : undefined;
   const favoriteValues = useMemo(
     () =>
@@ -822,14 +826,13 @@ function Hub({
         triage.isLoading ||
         checking
       }
-      navigationTitle={`Slack Compass · ${scopeTitle}`}
       filtering={false}
       searchText={searchText}
       onSearchTextChange={changeSearchText}
       selectedItemId={selection.selectedId}
       onSelectionChange={setActiveRowId}
       isShowingDetail={showDetail}
-      searchBarPlaceholder="Search Slack"
+      searchBarPlaceholder={hubSearchPlaceholder(scopeSummary)}
       searchBarAccessory={
         <List.Dropdown
           tooltip="Filter by membership"
@@ -1186,7 +1189,7 @@ function Hub({
             <List.Section
               key="triage"
               title="Mentions & DMs (Past 7 Days)"
-              subtitle={`${triage.rows.length} results`}
+              subtitle={countLabel(triage.rows.length, "result")}
             >
               {triage.rows.map(({ hit, state }) =>
                 messageRow(hit, triageRowId(hit), state),
@@ -1204,8 +1207,9 @@ function Hub({
             subtitle={
               messageHits.length > 0
                 ? [
+                    scopeSummary,
                     filterLabels,
-                    `${search.progress?.partial ? "Fetched: " : ""}${messageHits.length} results`,
+                    `${search.progress?.partial ? "Fetched: " : ""}${countLabel(messageHits.length, "result")}`,
                   ]
                     .filter(Boolean)
                     .join(" · ")
@@ -1223,7 +1227,7 @@ function Hub({
                       ? "Some searches failed"
                       : "Partially Fetched"
                 }
-                subtitle={`${search.progress.completedSearches}/${search.progress.totalSearches} searches${
+                subtitle={`${search.progress.completedSearches}/${countLabel(search.progress.totalSearches, "search", "searches")}${
                   search.progress.omittedCount
                     ? ` · ${search.progress.omittedCount} omitted`
                     : ""
@@ -1235,9 +1239,9 @@ function Hub({
                       title="Fetch Status"
                       target={
                         <Detail
-                          markdown={`Fetched ${messageHits.length} results. ${
+                          markdown={`Fetched ${countLabel(messageHits.length, "result")}. ${
                             search.progress.omittedCount
-                              ? `Omitted ${search.progress.omittedCount} results due to the storage limit.`
+                              ? `Omitted ${countLabel(search.progress.omittedCount, "result")} due to the storage limit.`
                               : ""
                           }\n\nEach search fetches up to 2 pages, with 400 results stored in total. Fetched results are sorted newest first; they may not be the newest 400 across the entire scope.\n\nNew messages, edits, and search indexing can shift page boundaries while fetching. Some messages may be missed even after deduplication. Narrow the scope and reload from the beginning if needed.`}
                         />

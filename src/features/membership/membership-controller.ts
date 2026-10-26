@@ -151,7 +151,7 @@ export class MembershipController {
       // APIの取消を無視する実装でも、操作全体の待ち時間を制限する。
       const timeout = new Promise<never>((_resolve, reject) => {
         abortWait = () =>
-          reject(new SlackApiError("aborted", "Request cancelled"));
+          reject(new SlackApiError("aborted", "Request canceled"));
         controller.signal.addEventListener("abort", abortWait, { once: true });
         timer = setTimeout(
           () =>

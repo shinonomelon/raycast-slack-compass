@@ -26,7 +26,7 @@ const personName = (
   const person = people.find((p) => p.id === id);
   return person?.displayName || person?.realName || person?.handle || fallback;
 };
-// 一覧の上に出す、指定中の条件。例：All / From: Alice / To: Me。selfId が分かれば、自分は Me と出す
+// 指定中の条件（検索欄の例文と Messages の見出しに出す）。例：All / From: Alice / To: Me。selfId が分かれば、自分は Me と出す
 export function searchScopeTitle(
   scope: SearchScope,
   library: ChannelLibrary,
@@ -60,6 +60,17 @@ export function searchScopeTitle(
       }`,
     );
   return parts.join(" / ");
+}
+// 一番上の画面のタイトルは変えない（Store のルール）ので、選んだ条件は検索欄の例文と Messages の見出しに出す。
+// 既定（All・送信者なし・宛先なし）のときは何も足さない
+export function activeScopeSummary(
+  scope: SearchScope,
+  title: string,
+): string | undefined {
+  return removableFilters(scope).length ? title : undefined;
+}
+export function hubSearchPlaceholder(summary: string | undefined): string {
+  return summary ? `Search Slack · ${summary}` : "Search Slack";
 }
 export type RemovableFilter = "range" | "sender" | "recipient";
 // 外せる条件。条件があるものだけを、範囲 → 送信者 → 宛先の順に返す

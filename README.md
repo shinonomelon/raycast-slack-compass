@@ -2,7 +2,7 @@
 
 Slack Compass finds Slack channels, people, and group DMs from Raycast. It also searches messages, posts messages, replies in threads, and adds or removes your reactions. It connects directly to the official Slack Web API and does not need slack-cli.
 
-Search supports fuzzy name matching, favorites, sections, filtering by sender, aliases, a triage list for mentions and DMs, and lookups of which channels a person has joined or who is in a channel.
+Search supports fuzzy name matching, favorites, sections, filtering by sender and recipient, aliases, a triage list for mentions and DMs, and lookups of which channels a person has joined or who is in a channel.
 
 ## Requirements
 
@@ -61,19 +61,20 @@ If you changed your Slack handle in the past, enter your old handles in **Previo
 
 Return opens the selected item in Slack. ⌘Return shows or hides details. ⌘N opens the post form for a conversation or person. You can also pick any of these from Actions.
 
-| Task                             | What to do                                                                                                                         |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Open a channel or person         | Type a name, select the row, press Return                                                                                          |
-| Read a message                   | Type a search term or `in:#channel-name`, select a result, press ⌘Return                                                           |
-| Post a message or send a DM      | Select a conversation or person, choose Write, write the message, choose Post and Open in Slack                                    |
-| Reply in a thread                | Select a message, choose Reply in Thread, write the reply, choose Post and Open in Slack                                           |
-| Add a reaction                   | Select a message, choose Add Reaction…, pick an emoji (⌘⇧E opens the picker)                                                       |
-| Remove your reaction             | Select a message, choose Remove My Reaction…, pick one of your reactions                                                           |
-| Triage messages addressed to you | Clear the search bar, select an item under Mentions & DMs, choose Mark as Handled                                                  |
-| Find channels a person is in     | Select a person, choose View Channels with This Person. Choose Add Person to narrow the list to channels all selected people share |
-| See who is in a channel          | Select a channel, choose View Members                                                                                              |
+| Task                                      | What to do                                                                                                                                                                       |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Open a channel or person                  | Type a name, select the row, press Return                                                                                                                                        |
+| Read a message                            | Type a search term or `in:#channel-name`, select a result, press ⌘Return                                                                                                         |
+| Post a message or send a DM               | Select a conversation or person, choose Write, write the message, choose Post and Open in Slack                                                                                  |
+| Reply in a thread                         | Select a message, choose Reply in Thread, write the reply, choose Post and Open in Slack                                                                                         |
+| Add a reaction                            | Select a message, choose Add Reaction…, pick an emoji (⌘⇧E opens the picker)                                                                                                     |
+| Remove your reaction                      | Select a message, choose Remove My Reaction…, pick one of your reactions                                                                                                         |
+| Triage messages addressed to you          | Clear the search bar, select an item under Mentions & DMs, choose Mark as Handled                                                                                                |
+| Search your posts or messages sent to you | Open Actions → Choose Search Filters…, set Sender to Me or Recipient to Mentions and DMs to Me, choose Show Messages. Remove Sender Filter or Remove Recipient Filter clears one |
+| Find channels a person is in              | Select a person, choose View Channels with This Person. Choose Add Person to narrow the list to channels all selected people share                                               |
+| See who is in a channel                   | Select a channel, choose View Members                                                                                                                                            |
 
-[Using Slack Compass](docs/usage.md) lists every action and shortcut. [Choosing a search scope](docs/search-scopes.md) explains how to filter by favorites, sections, channels, and sender.
+[Using Slack Compass](docs/usage.md) lists every action and shortcut. [Choosing a search scope](docs/search-scopes.md) explains how to filter by favorites, sections, channels, DMs, sender, and recipient.
 
 Message details show the thread leading up to the selected message. Reading earlier messages needs optional history scopes. See [Using Slack Compass](docs/usage.md).
 

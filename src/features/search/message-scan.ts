@@ -92,7 +92,13 @@ export function createMessageScan(
       ((plan.scope.channelIds === "all" ||
         ((hit.channelKind === "channel" || hit.channelKind === "private") &&
           plan.scope.channelIds.includes(hit.channelId))) &&
-        (!plan.scope.senderId || hit.userId === plan.scope.senderId)));
+        (!plan.scope.senderId || hit.userId === plan.scope.senderId) &&
+        // DM の範囲は1対1の DM だけ。自分以外の人宛ては DM・グループ DM に当たり、チャンネルには当たらない。
+        // 種類は hits.ts の判定による：is_mpim の印があれば mpim、is_private / is_group だけで is_mpim が無いと private、
+        // 印が全く無く ID が D 以外なら channel。そこで人宛ては channel だけを除く
+        (!plan.scope.dmUserId || hit.channelKind === "im") &&
+        (plan.scope.recipient?.kind !== "person" ||
+          hit.channelKind !== "channel")));
   async function run(signal: AbortSignal): Promise<MessageScanSnapshot> {
     if (busy || signal.aborted || (plan && !plan.canSearch)) return snapshot();
     const pause = ports.readPause();

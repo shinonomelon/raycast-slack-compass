@@ -6,6 +6,7 @@ import ts from "typescript";
 import * as scanModule from "./message-scan.ts";
 import * as gate from "./search-gate.ts";
 import { scopeKey } from "../../slack/identity.ts";
+import * as scopeModel from "../search-scope/model.ts";
 import type { Hit } from "../../slack/hits.ts";
 import type { MessageSearchPlan } from "../search-scope/search-plan.ts";
 import type { MessageSearch } from "./use-message-search.ts";
@@ -60,6 +61,7 @@ function harness() {
     },
     "./search-gate.ts": gate,
     "./message-scan.ts": scanModule,
+    "../search-scope/model.ts": scopeModel,
     "../../slack/identity.ts": { scopeKey },
     "../../slack/slack.ts": {
       searchPage: (query: string, options: { signal: AbortSignal }) =>

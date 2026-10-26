@@ -283,3 +283,46 @@ test("固定UTC2日後のbeforeを全ページへ送り、既存beforeと引用�
   assert.equal(result.hits.length, 1);
   assert.equal(result.asOf, `${initial / 1000}.000000`);
 });
+test("DMの範囲は1対1のDMだけ、人宛ての検索はDM・グループDMだけを結果に残す", async () => {
+  const scanOf = (scope: MessageSearchPlan["scope"]) =>
+    createMessageScan(
+      "",
+      { ...plan(["a"]), scope },
+      ports(async () => ({
+        kind: "ok",
+        capped: false,
+        hits: [
+          { ...hit(1, "D1"), channelKind: "im" },
+          { ...hit(2, "G1"), channelKind: "mpim" },
+          // is_private / is_group だけで is_mpim が無いと private と判定される。人宛てでは channel だけを除くので残る
+          { ...hit(4, "G2"), channelKind: "private" },
+          hit(3, "C1"),
+        ],
+      })),
+    );
+  const channelsOf = async (scope: MessageSearchPlan["scope"]) =>
+    (await scanOf(scope).run(new AbortController().signal)).hits
+      .map((h) => h.channelId)
+      .sort();
+  assert.deepEqual(
+    await channelsOf({ channelIds: "all", dmUserId: "U2", fingerprint: "f" }),
+    ["D1"],
+  );
+  assert.deepEqual(
+    await channelsOf({
+      channelIds: "all",
+      recipient: { kind: "person", userId: "U2" },
+      fingerprint: "f",
+    }),
+    ["D1", "G1", "G2"],
+  );
+  // 自分宛て（メンションと DM）は、チャンネルのメンションも残す
+  assert.deepEqual(
+    await channelsOf({
+      channelIds: "all",
+      recipient: { kind: "me" },
+      fingerprint: "f",
+    }),
+    ["C1", "D1", "G1", "G2"],
+  );
+});

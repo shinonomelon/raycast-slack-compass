@@ -14,6 +14,7 @@ import {
   type SearchStatus,
 } from "./search-gate.ts";
 import { searchPage } from "../../slack/slack.ts";
+import { hasStructuredScope } from "../search-scope/model.ts";
 import type { MessageSearchPlan } from "../search-scope/search-plan.ts";
 import {
   createMessageScan,
@@ -125,9 +126,7 @@ export function useMessageSearch(
       scan.current = undefined;
       return () => controller.abort();
     }
-    const structured =
-      current.plan &&
-      (current.plan.scope.channelIds !== "all" || current.plan.scope.senderId);
+    const structured = current.plan && hasStructuredScope(current.plan.scope);
     const gateQuery = structured ? "Filtered Search" : expression;
     const decision = decideSearch(
       gateQuery,

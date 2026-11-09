@@ -90,7 +90,7 @@ Slack Compass stores its cache and settings in `~/Library/Application Support/co
 - For `missing_scope`, add the scope that Slack Compass names to User Token Scopes, reinstall the app, and update the token in Raycast if it changed.
 - Raycast updates Store extensions automatically. If you run Slack Compass from source, see [Run from source](docs/reference.md#run-from-source) to update it.
 
-See [Settings, stored data, and troubleshooting](docs/reference.md#troubleshooting) for more. If a problem remains, open a [GitHub issue](https://github.com/shinonomelon/raycast-slack-hub/issues) with the steps you took and the error shown. Do not include tokens or real message text.
+See [Settings, stored data, and troubleshooting](docs/reference.md#troubleshooting) for more. If a problem remains, open a [GitHub issue](https://github.com/shinonomelon/raycast-slack-compass/issues) with the steps you took and the error shown. Do not include tokens or real message text.
 
 ## Development
 
@@ -113,4 +113,4 @@ Do not put tokens or real Slack messages in tests, logs, or issues.
 
 ## Known limitations
 
-Slack Compass does not support drafts, history around a message outside its thread, channel bookmarks, or Slack Lists. Reactions cover standard emoji only: you cannot pick a workspace custom emoji or remove someone else's reaction. Track these features in [GitHub Issues](https://github.com/shinonomelon/raycast-slack-hub/issues).
+Slack Compass does not support drafts, history around a message outside its thread, channel bookmarks, or Slack Lists. Reactions cover standard emoji only: you cannot pick a workspace custom emoji or remove someone else's reaction. Track these features in [GitHub Issues](https://github.com/shinonomelon/raycast-slack-compass/issues).

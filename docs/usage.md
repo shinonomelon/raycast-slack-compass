@@ -149,4 +149,4 @@ Write messages in Markdown. Choose mentions in the separate Mention field, not i
 
 ## Not supported
 
-Drafts, history before or after a message outside its thread, bookmarks, and Lists are not available. Reactions cover standard emoji only. Full-text results, posting, thread replies, reactions, and handling messages addressed to you work. To follow these features, see [GitHub Issues](https://github.com/shinonomelon/raycast-slack-hub/issues).
+Drafts, history before or after a message outside its thread, bookmarks, and Lists are not available. Reactions cover standard emoji only. Full-text results, posting, thread replies, reactions, and handling messages addressed to you work. To follow these features, see [GitHub Issues](https://github.com/shinonomelon/raycast-slack-compass/issues).

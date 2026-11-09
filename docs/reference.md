@@ -80,7 +80,7 @@ By default, history and thread fetches are limited to one request per minute eac
 - **"Delivery has not been confirmed":** The post may have arrived. Use Open Conversation or Open Parent Message in the toast to open Slack and check. Sending again can post the same message twice.
 - **Unknown read position:** A conversation whose Slack response has no `last_read` is treated as unknown. A failed fetch is never shown as zero unread.
 
-If a problem remains, open a [GitHub issue](https://github.com/shinonomelon/raycast-slack-hub/issues) with the steps you took and the error shown on screen. Do not include tokens, real message text, or private conversation names.
+If a problem remains, open a [GitHub issue](https://github.com/shinonomelon/raycast-slack-compass/issues) with the steps you took and the error shown on screen. Do not include tokens, real message text, or private conversation names.
 
 ## Development
 
@@ -91,8 +91,8 @@ See [Development](../README.md#development) in the README for tests, builds, and
 You need macOS, Raycast, git, and Node.js 22.22.2 or later.
 
 ```bash
-git clone https://github.com/shinonomelon/raycast-slack-hub.git ~/raycast-slack-hub
-cd ~/raycast-slack-hub
+git clone https://github.com/shinonomelon/raycast-slack-compass.git ~/raycast-slack-compass
+cd ~/raycast-slack-compass
 npm ci
 npm run dev
 ```
@@ -102,7 +102,7 @@ When the terminal prints `built extension successfully`, the extension is import
 To update a source install, run these commands, then stop `npm run dev` with Control+C when the import finishes. Your Raycast settings stay in place.
 
 ```bash
-cd ~/raycast-slack-hub
+cd ~/raycast-slack-compass
 git pull --ff-only
 npm ci
 npm run dev

@@ -28,7 +28,7 @@ function unique(values: readonly string[]): string[] {
   return [...new Set(values)];
 }
 
-// 保存された設定（Hubのprefs.json）を読む。
+// 保存された設定（Slack Compassのprefs.json）を読む。
 // 形が違う項目は無いものとして扱い、読み込みをエラーにしない
 export function parsePrefs(raw: unknown): Prefs {
   const source = isRecord(raw) ? raw : {};

@@ -3,7 +3,7 @@
   "name": "slack-compass",
   "title": "Slack Compass",
   "description": "Find Slack channels, people, and messages, see who is in which channel, and post or reply without leaving Raycast.",
-  "icon": "slack-hub-compass-v2.png",
+  "icon": "slack-compass.png",
   "author": "shinonomelon",
   "license": "MIT",
   "categories": [

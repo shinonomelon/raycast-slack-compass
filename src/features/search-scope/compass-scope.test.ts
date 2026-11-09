@@ -2,13 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   activeScopeSummary,
-  hubFavorites,
-  hubSearchPlaceholder,
+  compassFavorites,
+  compassSearchPlaceholder,
   removableFilters,
   removeScopeFilter,
   scopeForChannel,
   searchScopeTitle,
-} from "./hub-scope.ts";
+} from "./compass-scope.ts";
 import type { SearchScope } from "./model.ts";
 const library = {
   version: 1 as const,
@@ -24,11 +24,11 @@ const conversations = [
 ];
 test("移行前のチャンネル印を別アカウントへ表示せず、人物とグループDMは残す", () => {
   assert.deepEqual(
-    hubFavorites(["C1", "C3", "U2"], library, false, conversations),
+    compassFavorites(["C1", "C3", "U2"], library, false, conversations),
     ["C3", "U2"],
   );
   assert.deepEqual(
-    hubFavorites(["C1", "C3", "U2"], library, true, conversations),
+    compassFavorites(["C1", "C3", "U2"], library, true, conversations),
     ["C3", "U2", "C2"],
   );
 });
@@ -189,11 +189,11 @@ test("検索欄の例文は、既定の条件ならSearch Slack、条件を選�
   const fromMe: SearchScope = { range: { kind: "all" }, senderId: "U1" };
   assert.equal(activeScopeSummary(all, "All"), undefined);
   assert.equal(
-    hubSearchPlaceholder(activeScopeSummary(all, "All")),
+    compassSearchPlaceholder(activeScopeSummary(all, "All")),
     "Search Slack",
   );
   assert.equal(
-    hubSearchPlaceholder(activeScopeSummary(fromMe, "All / From: Me")),
+    compassSearchPlaceholder(activeScopeSummary(fromMe, "All / From: Me")),
     "Search Slack · All / From: Me",
   );
   assert.equal(

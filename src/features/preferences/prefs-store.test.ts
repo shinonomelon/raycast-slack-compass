@@ -24,10 +24,10 @@ import {
 import type { Prefs } from "../../shared/types.ts";
 
 // 本物のファイルを、一時フォルダの中で読み書きして確かめる。置き場は Raycast の extensions フォルダと同じ並びにする：
-//   <root>/slack-hub（Hub の保存場所）・<root>/slack-open-channel・<root>/slack-mention（引き継ぎ元）
+//   <root>/slack-compass（Slack Compass の保存場所）・<root>/slack-open-channel・<root>/slack-mention（引き継ぎ元）
 type Env = {
-  hubDir: string;
-  hubFile: string;
+  compassDir: string;
+  compassFile: string;
   warnings: string[];
   // 本人に知らせる出来事（prefs.ts がトーストにする）
   notices: PrefsNotice[];
@@ -39,17 +39,17 @@ type Env = {
 const NOW = 1759560000000;
 
 function withExtensions(body: (env: Env) => void): void {
-  const root = mkdtempSync(join(tmpdir(), "slack-hub-prefs-"));
-  const hubDir = join(root, "slack-hub");
+  const root = mkdtempSync(join(tmpdir(), "slack-compass-prefs-"));
+  const compassDir = join(root, "slack-compass");
   const warnings: string[] = [];
   const notices: PrefsNotice[] = [];
   try {
     body({
-      hubDir,
-      hubFile: join(hubDir, "prefs.json"),
+      compassDir,
+      compassFile: join(compassDir, "prefs.json"),
       warnings,
       notices,
-      store: createPrefsStore(hubDir, {
+      store: createPrefsStore(compassDir, {
         warn: (message) => warnings.push(message),
         notify: (notice) => notices.push(notice),
         now: () => NOW,
@@ -80,7 +80,7 @@ function withExtensions(body: (env: Env) => void): void {
   }
 }
 
-const hubPrefs = (favorite: string): Prefs => ({
+const compassPrefs = (favorite: string): Prefs => ({
   favorites: [favorite],
   aliases: {},
   dictionary: [],
@@ -90,15 +90,15 @@ const hubPrefs = (favorite: string): Prefs => ({
 const readPrefsFile = (file: string): unknown =>
   JSON.parse(readFileSync(file, "utf8"));
 
-test("初回はほかの拡張に設定があっても空から始め、Hubの設定だけを保存する", () => {
-  withExtensions(({ hubFile, store, warnings, notices, writeLegacy }) => {
+test("初回はほかの拡張に設定があっても空から始め、Slack Compassの設定だけを保存する", () => {
+  withExtensions(({ compassFile, store, warnings, notices, writeLegacy }) => {
     writeLegacy("C-open-channel", "C-compose");
     // 置き場のフォルダもまだ無い状態から始める
-    assert.ok(!existsSync(hubFile));
+    assert.ok(!existsSync(compassFile));
 
     const first = store.load();
     assert.deepEqual(first, emptyPrefs());
-    assert.deepEqual(readPrefsFile(hubFile), first);
+    assert.deepEqual(readPrefsFile(compassFile), first);
 
     // 引き継ぎ元が変わっても、2回目は読まない
     writeLegacy("C-changed", "C-changed-2");
@@ -109,17 +109,17 @@ test("初回はほかの拡張に設定があっても空から始め、Hubの�
   });
 });
 
-test("Hub の prefs.json があるときは、それだけを使い、引き継ぎ元を読まず、ファイルにも触れない", () => {
+test("Slack Compass の prefs.json があるときは、それだけを使い、引き継ぎ元を読まず、ファイルにも触れない", () => {
   withExtensions(
-    ({ hubDir, hubFile, store, warnings, notices, writeLegacy }) => {
+    ({ compassDir, compassFile, store, warnings, notices, writeLegacy }) => {
       writeLegacy("C-open-channel", "C-compose");
-      mkdirSync(hubDir, { recursive: true });
-      const content = JSON.stringify(hubPrefs("C-hub"));
-      writeFileSync(hubFile, content);
+      mkdirSync(compassDir, { recursive: true });
+      const content = JSON.stringify(compassPrefs("C-compass"));
+      writeFileSync(compassFile, content);
 
-      assert.deepEqual(store.load(), hubPrefs("C-hub"));
-      assert.equal(readFileSync(hubFile, "utf8"), content);
-      assert.deepEqual(readdirSync(hubDir), ["prefs.json"]);
+      assert.deepEqual(store.load(), compassPrefs("C-compass"));
+      assert.equal(readFileSync(compassFile, "utf8"), content);
+      assert.deepEqual(readdirSync(compassDir), ["prefs.json"]);
       assert.deepEqual(warnings, []);
       assert.deepEqual(notices, []);
     },
@@ -128,28 +128,28 @@ test("Hub の prefs.json があるときは、それだけを使い、引き継�
 
 test("壊れた JSON は、別名に退避して空の設定で始める。引き継ぎ元は読まず、次からは空の設定のファイルを読む", () => {
   withExtensions(
-    ({ hubDir, hubFile, store, warnings, notices, writeLegacy }) => {
+    ({ compassDir, compassFile, store, warnings, notices, writeLegacy }) => {
       writeLegacy("C-open-channel", "C-compose");
-      mkdirSync(hubDir, { recursive: true });
-      writeFileSync(hubFile, "{ 壊れた");
+      mkdirSync(compassDir, { recursive: true });
+      writeFileSync(compassFile, "{ 壊れた");
 
       // 引き継ぎ元に中身があっても、読まない
       assert.deepEqual(store.load(), emptyPrefs());
       const backup = `prefs.json.broken-${NOW}`;
-      assert.deepEqual(readdirSync(hubDir).sort(), ["prefs.json", backup]);
-      assert.equal(readFileSync(join(hubDir, backup), "utf8"), "{ 壊れた");
-      assert.deepEqual(readPrefsFile(hubFile), emptyPrefs());
+      assert.deepEqual(readdirSync(compassDir).sort(), ["prefs.json", backup]);
+      assert.equal(readFileSync(join(compassDir, backup), "utf8"), "{ 壊れた");
+      assert.deepEqual(readPrefsFile(compassFile), emptyPrefs());
       assert.equal(warnings.length, 1);
       assert.ok(warnings[0].includes(backup));
       // 本人に知らせる：壊れていたので退避したこと。退避先も渡す
       assert.deepEqual(notices, [
-        { kind: "broken-restarted", backup: join(hubDir, backup) },
+        { kind: "broken-restarted", backup: join(compassDir, backup) },
       ]);
 
       // 保存してあるので、次に開いたときは「無い」ものとして引き継ぎ元を読み直さない。退避も増えない
       writeLegacy("C-changed", "C-changed-2");
       assert.deepEqual(store.load(), emptyPrefs());
-      assert.deepEqual(readdirSync(hubDir).sort(), ["prefs.json", backup]);
+      assert.deepEqual(readdirSync(compassDir).sort(), ["prefs.json", backup]);
       assert.equal(warnings.length, 1);
       assert.equal(notices.length, 1);
     },
@@ -157,21 +157,21 @@ test("壊れた JSON は、別名に退避して空の設定で始める。引�
 });
 
 test("空のファイルも壊れたものとして扱い、退避して空の設定で始める", () => {
-  withExtensions(({ hubDir, hubFile, store, writeLegacy }) => {
+  withExtensions(({ compassDir, compassFile, store, writeLegacy }) => {
     writeLegacy("C-open-channel", "C-compose");
-    mkdirSync(hubDir, { recursive: true });
-    writeFileSync(hubFile, "");
+    mkdirSync(compassDir, { recursive: true });
+    writeFileSync(compassFile, "");
     assert.deepEqual(store.load(), emptyPrefs());
-    assert.ok(existsSync(join(hubDir, `prefs.json.broken-${NOW}`)));
+    assert.ok(existsSync(join(compassDir, `prefs.json.broken-${NOW}`)));
   });
 });
 
 test("JSON として読めて形が違う場合は、壊れたものとして退避せず、使える項目だけを残す", () => {
-  withExtensions(({ hubDir, hubFile, store, warnings, notices }) => {
-    mkdirSync(hubDir, { recursive: true });
-    writeFileSync(hubFile, JSON.stringify(["配列"]));
+  withExtensions(({ compassDir, compassFile, store, warnings, notices }) => {
+    mkdirSync(compassDir, { recursive: true });
+    writeFileSync(compassFile, JSON.stringify(["配列"]));
     assert.deepEqual(store.load(), emptyPrefs());
-    assert.deepEqual(readdirSync(hubDir), ["prefs.json"]);
+    assert.deepEqual(readdirSync(compassDir), ["prefs.json"]);
     assert.deepEqual(warnings, []);
     assert.deepEqual(notices, []);
   });
@@ -179,11 +179,11 @@ test("JSON として読めて形が違う場合は、壊れたものとして退
 
 test("無い以外の理由で読めないとき（EISDIR）は、退避も引き継ぎもせず、空の設定で動き、そのファイルを上書きしない", () => {
   withExtensions(
-    ({ hubDir, hubFile, store, warnings, notices, writeLegacy }) => {
+    ({ compassDir, compassFile, store, warnings, notices, writeLegacy }) => {
       writeLegacy("C-open-channel", "C-compose");
       // prefs.json がフォルダになっていて、読むと EISDIR になる。中のファイルが残っているかで、上書きや消去を見分ける
-      mkdirSync(hubFile, { recursive: true });
-      writeFileSync(join(hubFile, "keep.txt"), "残す");
+      mkdirSync(compassFile, { recursive: true });
+      writeFileSync(join(compassFile, "keep.txt"), "残す");
 
       assert.deepEqual(store.load(), emptyPrefs());
       assert.equal(warnings.length, 1);
@@ -195,20 +195,20 @@ test("無い以外の理由で読めないとき（EISDIR）は、退避も引�
           notices[0].reason.includes("EISDIR"),
       );
       // 退避も保存もされていない
-      assert.deepEqual(readdirSync(hubDir), ["prefs.json"]);
-      assert.ok(statSync(hubFile).isDirectory());
-      assert.equal(readFileSync(join(hubFile, "keep.txt"), "utf8"), "残す");
+      assert.deepEqual(readdirSync(compassDir), ["prefs.json"]);
+      assert.ok(statSync(compassFile).isDirectory());
+      assert.equal(readFileSync(join(compassFile, "keep.txt"), "utf8"), "残す");
 
       // この回の保存も、そのファイルを上書きしない（一時ファイルも作らない）
-      store.save(hubPrefs("C-new"));
-      assert.deepEqual(readdirSync(hubDir), ["prefs.json"]);
-      assert.ok(statSync(hubFile).isDirectory());
+      store.save(compassPrefs("C-new"));
+      assert.deepEqual(readdirSync(compassDir), ["prefs.json"]);
+      assert.ok(statSync(compassFile).isDirectory());
 
       // 読めるようになった（ここでは、フォルダを片づけて「無い」状態に戻した）あとの load で、保存も戻る
-      rmSync(hubFile, { recursive: true });
+      rmSync(compassFile, { recursive: true });
       assert.deepEqual(store.load(), emptyPrefs());
-      store.save(hubPrefs("C-new"));
-      assert.deepEqual(readPrefsFile(hubFile), hubPrefs("C-new"));
+      store.save(compassPrefs("C-new"));
+      assert.deepEqual(readPrefsFile(compassFile), compassPrefs("C-new"));
     },
   );
 });
@@ -222,25 +222,25 @@ test(
   },
   () => {
     withExtensions(
-      ({ hubDir, hubFile, store, warnings, notices, writeLegacy }) => {
+      ({ compassDir, compassFile, store, warnings, notices, writeLegacy }) => {
         writeLegacy("C-open-channel", "C-compose");
-        mkdirSync(hubDir, { recursive: true });
-        const content = JSON.stringify(hubPrefs("C-hub"));
-        writeFileSync(hubFile, content);
-        chmodSync(hubFile, 0o000);
+        mkdirSync(compassDir, { recursive: true });
+        const content = JSON.stringify(compassPrefs("C-compass"));
+        writeFileSync(compassFile, content);
+        chmodSync(compassFile, 0o000);
         try {
-          assert.throws(() => readFileSync(hubFile), { code: "EACCES" });
+          assert.throws(() => readFileSync(compassFile), { code: "EACCES" });
           assert.deepEqual(store.load(), emptyPrefs());
           assert.equal(warnings.length, 1);
           assert.equal(notices.length, 1);
           assert.equal(notices[0].kind, "unreadable");
-          store.save(hubPrefs("C-new"));
+          store.save(compassPrefs("C-new"));
         } finally {
-          chmodSync(hubFile, 0o600);
+          chmodSync(compassFile, 0o600);
         }
         // 退避も上書きもされず、中身はそのまま
-        assert.deepEqual(readdirSync(hubDir), ["prefs.json"]);
-        assert.equal(readFileSync(hubFile, "utf8"), content);
+        assert.deepEqual(readdirSync(compassDir), ["prefs.json"]);
+        assert.equal(readFileSync(compassFile, "utf8"), content);
       },
     );
   },
@@ -255,14 +255,14 @@ test(
   },
   () => {
     withExtensions(
-      ({ hubDir, hubFile, store, warnings, notices, writeLegacy }) => {
+      ({ compassDir, compassFile, store, warnings, notices, writeLegacy }) => {
         writeLegacy("C-open-channel", "C-compose");
-        mkdirSync(hubDir, { recursive: true });
-        writeFileSync(hubFile, "{ 壊れた");
+        mkdirSync(compassDir, { recursive: true });
+        writeFileSync(compassFile, "{ 壊れた");
         // 読めるが、置き場に書けない（改名も新しいファイルも作れない）
-        chmodSync(hubDir, 0o500);
+        chmodSync(compassDir, 0o500);
         try {
-          assert.throws(() => writeFileSync(join(hubDir, "probe"), "x"), {
+          assert.throws(() => writeFileSync(join(compassDir, "probe"), "x"), {
             code: "EACCES",
           });
           assert.deepEqual(store.load(), emptyPrefs());
@@ -271,33 +271,33 @@ test(
           assert.equal(notices.length, 1);
           assert.equal(notices[0].kind, "broken-kept");
         } finally {
-          chmodSync(hubDir, 0o700);
+          chmodSync(compassDir, 0o700);
         }
         // 壊れた中身が、そのまま残っている（退避も保存もされていない）
-        assert.deepEqual(readdirSync(hubDir), ["prefs.json"]);
-        assert.equal(readFileSync(hubFile, "utf8"), "{ 壊れた");
+        assert.deepEqual(readdirSync(compassDir), ["prefs.json"]);
+        assert.equal(readFileSync(compassFile, "utf8"), "{ 壊れた");
 
         // 書けるようになっても、この回（次の load まで）は保存しない
-        store.save(hubPrefs("C-new"));
-        assert.equal(readFileSync(hubFile, "utf8"), "{ 壊れた");
+        store.save(compassPrefs("C-new"));
+        assert.equal(readFileSync(compassFile, "utf8"), "{ 壊れた");
       },
     );
   },
 );
 
 test("保存した設定は、そのまま読み直せる。一時ファイルは残らず、置き場のフォルダが無ければ作る", () => {
-  withExtensions(({ hubDir, hubFile, store }) => {
-    assert.ok(!existsSync(hubDir));
-    store.save(hubPrefs("C-1"));
-    store.save(hubPrefs("C-2"));
-    assert.deepEqual(readdirSync(hubDir), ["prefs.json"]);
-    assert.deepEqual(readPrefsFile(hubFile), hubPrefs("C-2"));
-    assert.deepEqual(store.load(), hubPrefs("C-2"));
+  withExtensions(({ compassDir, compassFile, store }) => {
+    assert.ok(!existsSync(compassDir));
+    store.save(compassPrefs("C-1"));
+    store.save(compassPrefs("C-2"));
+    assert.deepEqual(readdirSync(compassDir), ["prefs.json"]);
+    assert.deepEqual(readPrefsFile(compassFile), compassPrefs("C-2"));
+    assert.deepEqual(store.load(), compassPrefs("C-2"));
   });
 });
 
 test("トーストの文：壊れていたときは退避先のファイル名を出し（置き場のパスは出さない）、読めなかったときは理由を出す", () => {
-  const backup = `/Users/x/extensions/slack-hub/prefs.json.broken-${NOW}`;
+  const backup = `/Users/x/extensions/slack-compass/prefs.json.broken-${NOW}`;
   const broken = prefsNoticeToast({ kind: "broken-restarted", backup });
   assert.equal(broken.title, "The preferences file was corrupted");
   assert.ok(broken.message.includes(`prefs.json.broken-${NOW}`));

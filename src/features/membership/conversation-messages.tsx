@@ -1,4 +1,4 @@
-import { useThreadContext } from "../hub/use-thread-context.ts";
+import { useThreadContext } from "../compass/use-thread-context.ts";
 import {
   Action,
   ActionPanel,
@@ -8,9 +8,9 @@ import {
 } from "@raycast/api";
 import { useState } from "react";
 import type { Conversation } from "../../shared/types.ts";
-import { DETAILS_SHORTCUT } from "../hub/shortcuts.ts";
-import { MessageRow } from "../hub/message-row.tsx";
-import { textWithFilter } from "../hub/view-order.ts";
+import { DETAILS_SHORTCUT } from "../compass/shortcuts.ts";
+import { MessageRow } from "../compass/message-row.tsx";
+import { textWithFilter } from "../compass/view-order.ts";
 import { useMessageSearch } from "../search/use-message-search.ts";
 import type { MembershipContext } from "./membership-context.ts";
 export function ConversationMessages({

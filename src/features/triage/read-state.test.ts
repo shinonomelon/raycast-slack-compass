@@ -3,7 +3,7 @@ import { registerHooks } from "node:module";
 import { test } from "node:test";
 import { normalizeMatch, type Hit } from "../../slack/hits.ts";
 import { createTriageFetchers } from "./triage-fetch.ts";
-import { messageDetailBody } from "../hub/message-detail.ts";
+import { messageDetailBody } from "../compass/message-detail.ts";
 
 // Cacheだけをメモリの偽物にし、実際の保存・読込の境界を確認する。
 const hooks = registerHooks({

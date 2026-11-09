@@ -48,7 +48,7 @@ function render(opened: boolean, withContext: boolean) {
   const exports: { MessageRow: (props: object) => Node } = {} as never;
   runInNewContext(
     ts.transpileModule(
-      readFileSync("src/features/hub/message-row.tsx", "utf8"),
+      readFileSync("src/features/compass/message-row.tsx", "utf8"),
       {
         compilerOptions: {
           target: ts.ScriptTarget.ES2022,

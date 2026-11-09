@@ -2,7 +2,7 @@ import type { Conversation, Person } from "../../shared/types.ts";
 import type { ChannelLibrary } from "../channel-library/model.ts";
 import type { SearchScope } from "./model.ts";
 // チャンネルだけを新しい正本へ切り替え、人物とグループDMの設定を残す。
-export function hubFavorites(
+export function compassFavorites(
   legacy: readonly string[],
   library: ChannelLibrary,
   ready: boolean,
@@ -69,7 +69,7 @@ export function activeScopeSummary(
 ): string | undefined {
   return removableFilters(scope).length ? title : undefined;
 }
-export function hubSearchPlaceholder(summary: string | undefined): string {
+export function compassSearchPlaceholder(summary: string | undefined): string {
   return summary ? `Search Slack · ${summary}` : "Search Slack";
 }
 export type RemovableFilter = "range" | "sender" | "recipient";

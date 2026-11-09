@@ -21,7 +21,7 @@ const initial: ChannelLibrary = {
 
 // 実際の親画面の管理コールバックとフォームを動かし、フォームへ戻った後の再オープンを確認する。
 function harness() {
-  const path = "src/features/hub/hub-screen.tsx";
+  const path = "src/features/compass/compass-screen.tsx";
   const source = ts.createSourceFile(
     path,
     readFileSync(path, "utf8"),
@@ -170,7 +170,7 @@ function harness() {
   };
 }
 
-test(`hubの条件フォームは管理画面で作成・更新後に戻って開き直すと最新一覧を渡す`, async () => {
+test(`Slack Compassの条件フォームは管理画面で作成・更新後に戻って開き直すと最新一覧を渡す`, async () => {
   const ui = harness();
   assert.equal(ui.open().props.library, initial);
   const created = await ui.update({ id: "s1", name: "新規", channelIds: [] });

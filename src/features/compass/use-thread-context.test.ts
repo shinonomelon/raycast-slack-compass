@@ -84,7 +84,7 @@ function harness() {
     {} as never;
   runInNewContext(
     ts.transpileModule(
-      readFileSync("src/features/hub/use-thread-context.ts", "utf8"),
+      readFileSync("src/features/compass/use-thread-context.ts", "utf8"),
       {
         compilerOptions: {
           target: ts.ScriptTarget.ES2022,

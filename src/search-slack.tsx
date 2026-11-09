@@ -1,5 +1,5 @@
-import Hub from "./features/hub/hub-screen.tsx";
+import Compass from "./features/compass/compass-screen.tsx";
 
 export default function Command() {
-  return <Hub />;
+  return <Compass />;
 }

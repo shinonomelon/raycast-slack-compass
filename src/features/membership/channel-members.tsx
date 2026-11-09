@@ -12,8 +12,8 @@ import { slackAppUserLink } from "../compose/compose.ts";
 import type { MembershipContext } from "./membership-context.ts";
 import { useChannelMembers } from "./use-membership.ts";
 import { allMatches, memberRows, membershipStatus } from "./membership-view.ts";
-import { rowDetail } from "../hub/row-detail.ts";
-import { DETAILS_SHORTCUT, WRITE_SHORTCUT } from "../hub/shortcuts.ts";
+import { rowDetail } from "../compass/row-detail.ts";
+import { DETAILS_SHORTCUT, WRITE_SHORTCUT } from "../compass/shortcuts.ts";
 import { PersonChannels } from "./person-channels.tsx";
 export function ChannelMembers({
   context,

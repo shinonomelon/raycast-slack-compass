@@ -1,4 +1,4 @@
-// 設定ファイル（Hub の prefs.json）の読み込みと保存。
+// 設定ファイル（Slack Compass の prefs.json）の読み込みと保存。
 // @raycast/api を読み込まないので、node のテストから、一時フォルダを置き場にして動かせる（prefs.ts が Raycast の置き場を渡す）
 import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
@@ -126,14 +126,14 @@ export function createPrefsStore(
       notify?.({ kind: "unreadable", reason: reason(error) });
       return emptyPrefs();
     }
-    let hub: unknown;
+    let saved: unknown;
     try {
-      hub = JSON.parse(text);
+      saved = JSON.parse(text);
     } catch {
       return startOverFromBrokenFile();
     }
-    // Hubのprefs.jsonだけを使う。
-    return parsePrefs(hub);
+    // Slack Compassのprefs.jsonだけを使う。
+    return parsePrefs(saved);
   }
   // JSON として読めない。次の保存で上書きして失わないよう、別名に退避して、空の設定で始める。
   // 空の設定をすぐ保存し、次回の起動でも同じ状態から始める。

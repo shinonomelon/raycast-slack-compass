@@ -37,15 +37,15 @@ import {
 } from "../search-scope/model.ts";
 import { createMessageSearchPlan } from "../search-scope/search-plan.ts";
 import {
-  hubFavorites,
+  compassFavorites,
   removableFilters,
   removeScopeFilter,
   scopeForChannel,
   searchScopeTitle,
   activeScopeSummary,
-  hubSearchPlaceholder,
+  compassSearchPlaceholder,
   type RemovableFilter,
-} from "../search-scope/hub-scope.ts";
+} from "../search-scope/compass-scope.ts";
 import {
   destinationLabel,
   sendTargetOf,
@@ -247,7 +247,7 @@ export default function Command() {
     return <NoIdentity failure={failure} checking={checking} />;
   }
   return (
-    <Hub
+    <Compass
       key={scopeKey(session.display)}
       session={session}
       previousHandles={settings.previousHandles}
@@ -256,7 +256,7 @@ export default function Command() {
     />
   );
 }
-function Hub({
+function Compass({
   session,
   previousHandles,
   failure,
@@ -344,7 +344,7 @@ function Hub({
       : undefined;
   const favoriteValues = useMemo(
     () =>
-      hubFavorites(
+      compassFavorites(
         prefs.favorites,
         library.library,
         library.ready,
@@ -832,7 +832,7 @@ function Hub({
       selectedItemId={selection.selectedId}
       onSelectionChange={setActiveRowId}
       isShowingDetail={showDetail}
-      searchBarPlaceholder={hubSearchPlaceholder(scopeSummary)}
+      searchBarPlaceholder={compassSearchPlaceholder(scopeSummary)}
       searchBarAccessory={
         <List.Dropdown
           tooltip="Filter by membership"

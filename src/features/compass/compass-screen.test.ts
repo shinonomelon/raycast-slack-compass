@@ -3,13 +3,13 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
-import * as hubScope from "../search-scope/hub-scope.ts";
+import * as compassScope from "../search-scope/compass-scope.ts";
 import { countLabel } from "../../shared/plural.ts";
 import * as orderFunctions from "./view-order.ts";
 
-// 実際のHubの描画部分を使い、Raycast本体を起動せず検索条件変更中の行を検査する。
+// 実際のSlack Compassの描画部分を使い、Raycast本体を起動せず検索条件変更中の行を検査する。
 // JSXは値として受け取り、通信や画面操作は行わない。
-const source = readFileSync("src/features/hub/hub-screen.tsx", "utf8");
+const source = readFileSync("src/features/compass/compass-screen.tsx", "utf8");
 const marker = source.indexOf("// メッセージ：検索結果");
 const start = source.indexOf("        if (!statusRow", marker);
 const end = source.indexOf("\n      })}", start);
@@ -73,7 +73,7 @@ function render(
   return { rows, section };
 }
 
-test("Hubは条件変更直後と取得待ちの間に前の条件のメッセージを表示しない", () => {
+test("Slack Compassは条件変更直後と取得待ちの間に前の条件のメッセージを表示しない", () => {
   const previous = { query: "alpha", hits: [a] };
   assert.deepEqual(render(previous, "alpha").rows, [a]);
   assert.deepEqual(render(previous, "bravo").rows, []);
@@ -85,7 +85,7 @@ test("Hubは条件変更直後と取得待ちの間に前の条件のメッセ�
   assert.equal(current.section?.props.subtitle, "in:bravo · 1 result");
 });
 
-test("Hubは選んだ検索条件をMessagesの見出しの先頭に出し、一番上の画面のタイトルは変えない", () => {
+test("Slack Compassは選んだ検索条件をMessagesの見出しの先頭に出し、一番上の画面のタイトルは変えない", () => {
   const search = { query: "bravo", hits: [b] };
   assert.equal(
     render(search, "bravo", undefined, "All / From: Me").section?.props
@@ -101,14 +101,14 @@ test("Hubは選んだ検索条件をMessagesの見出しの先頭に出し、一
   assert.doesNotMatch(root, /navigationTitle/);
 });
 
-test("Hubは同じ検索式の再取得中にはその検索結果を表示できる", () => {
+test("Slack Compassは同じ検索式の再取得中にはその検索結果を表示できる", () => {
   assert.deepEqual(render({ query: "alpha", hits: [a] }, "alpha").rows, [a]);
 });
 
-// 純粋関数のテストに加え、Hubの描画順・操作・選択予約が同じモードを渡すことを実際のコールバックで検査する。
+// 純粋関数のテストに加え、Slack Compassの描画順・操作・選択予約が同じモードを渡すことを実際のコールバックで検査する。
 function orderHarness() {
   const ast = ts.createSourceFile(
-    "hub-screen.tsx",
+    "compass-screen.tsx",
     source,
     ts.ScriptTarget.Latest,
     true,
@@ -175,7 +175,7 @@ function orderHarness() {
   return context;
 }
 
-test("Hubのメッセージ表示操作は初期表示・双方向swap・文字変更・候補の表示順と先頭選択を整合させる", () => {
+test("Slack Compassのメッセージ表示操作は初期表示・双方向swap・文字変更・候補の表示順と先頭選択を整合させる", () => {
   const ui = orderHarness();
   ui.exports.apply({ range: { kind: "favorites" } }, { showMessages: true });
   const assertFirst = (
@@ -228,7 +228,7 @@ function channelEntryHarness(
   scope: object = { range: { kind: "all" } },
 ) {
   const ast = ts.createSourceFile(
-    "hub-screen.tsx",
+    "compass-screen.tsx",
     source,
     ts.ScriptTarget.Latest,
     true,
@@ -289,7 +289,7 @@ function channelEntryHarness(
     {
       exports,
       ...orderFunctions,
-      scopeForChannel: hubScope.scopeForChannel,
+      scopeForChannel: compassScope.scopeForChannel,
       item: { id: "C1" },
       setSearchScope: (scope: typeof next.scope) => {
         next.scope = scope;
@@ -352,14 +352,14 @@ for (const messageMode of [false, true]) {
   });
 }
 
-// 条件を1つずつ外す Action。Hub の実際の宣言を取り出して動かし、検索語が残ることを確かめる。
+// 条件を1つずつ外す Action。Slack Compass の実際の宣言を取り出して動かし、検索語が残ることを確かめる。
 function removeHarness(
   searchScope: object,
   searchText: string,
   messageMode = false,
 ) {
   const ast = ts.createSourceFile(
-    "hub-screen.tsx",
+    "compass-screen.tsx",
     source,
     ts.ScriptTarget.Latest,
     true,
@@ -408,8 +408,8 @@ function removeHarness(
       ...orderFunctions,
       Action: "Action",
       Icon: { XMarkCircle: "x-mark-circle" },
-      removableFilters: hubScope.removableFilters,
-      removeScopeFilter: hubScope.removeScopeFilter,
+      removableFilters: compassScope.removableFilters,
+      removeScopeFilter: compassScope.removeScopeFilter,
       searchScope,
       searchText,
       messageMode,
@@ -500,7 +500,7 @@ test("条件を外すActionは、その条件だけを外し、検索語も残�
 
 test("条件を外すActionと条件の選択画面は、検索結果の行・会話の行・空の状態・競合の行のすべてで使える", () => {
   const ast = ts.createSourceFile(
-    "hub-screen.tsx",
+    "compass-screen.tsx",
     source,
     ts.ScriptTarget.Latest,
     true,
